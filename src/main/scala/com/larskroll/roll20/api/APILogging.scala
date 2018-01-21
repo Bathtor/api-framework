@@ -20,7 +20,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- * 
+ *
  */
 package com.larskroll.roll20.api
 
@@ -30,41 +30,47 @@ trait APILogging {
 
   protected var debugOn: Boolean = true;
 
-  def error(s: String): Unit = {
-    log(s"ERROR: ${s}");
+  def error(s: String, observeNewlines: Boolean = false): Unit = {
+    log(s"ERROR: ${s}", observeNewlines);
   }
 
-  def error(t: Throwable): Unit = {
-    error(t.toString);
-    debug(t);
+  def error(t: Throwable): Unit = error(t, false);
+  def error(t: Throwable, observeNewlines: Boolean): Unit = {
+    error(t.toString, observeNewlines);
+    debug(t, observeNewlines);
   }
 
-  def warn(s: String): Unit = {
-    log(s"WARNING: ${s}");
+  def warn(s: String, observeNewlines: Boolean = false): Unit = {
+    log(s"WARNING: ${s}", observeNewlines);
   }
 
-  def info(s: String): Unit = {
-    log(s"INFO: ${s}");
+  def info(s: String, observeNewlines: Boolean = false): Unit = {
+    log(s"INFO: ${s}", observeNewlines);
   }
 
-  private def debug(t: Throwable): Unit = {
+  private def debug(t: Throwable, observeNewlines: Boolean): Unit = {
     if (debugOn) {
       val stringWriter = new java.io.StringWriter();
       val printWriter = new java.io.PrintWriter(stringWriter);
       t.printStackTrace(printWriter);
       printWriter.flush();
       printWriter.close();
-      log(stringWriter.toString());
+      log(stringWriter.toString(), observeNewlines);
     }
   }
 
-  def debug(s: String): Unit = {
+  def debug(s: String, observeNewlines: Boolean = false): Unit = {
     if (debugOn) {
-      log(s"DEBUG: ${s}");
+      log(s"DEBUG: ${s}", observeNewlines);
     }
   }
 
-  def log(s: String): Unit = {
-    Roll20API.log(s);
+  def log(s: String, observeNewlines: Boolean = false): Unit = {
+    if (observeNewlines) {
+      val lines = s.split("\n");
+      lines.foreach(Roll20API.log(_));
+    } else {
+      Roll20API.log(s);
+    }
   }
 }
