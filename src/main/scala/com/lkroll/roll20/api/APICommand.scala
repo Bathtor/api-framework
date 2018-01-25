@@ -22,9 +22,9 @@
  * SOFTWARE.
  *
  */
-package com.larskroll.roll20.api
+package com.lkroll.roll20.api
 
-import com.larskroll.roll20.api.facade.Roll20API
+import com.lkroll.roll20.api.facade.Roll20API
 
 class APIOptionsException(message: String, val replyWith: Option[String] = None) extends Exception(message) {
 

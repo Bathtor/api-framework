@@ -22,22 +22,12 @@
  * SOFTWARE.
  *
  */
-package com.larskroll.roll20.api
+package com.lkroll.roll20.api
 
-import com.larskroll.roll20.api.facade.Roll20API.{ InlineRollResults => FacadeIRR, InlineRoll => FacadeIR, _ }
+import com.lkroll.roll20.api.facade.Roll20API.{ InlineRollResults => FacadeIRR, InlineRoll => FacadeIR, _ }
+import com.lkroll.roll20.core._
 import scalajs.js
 import scalajs.js.JSON
-
-object ChatType extends Enumeration {
-  type ChatType = Value;
-
-  val general, rollresult, gmrollresult, emote, whisper, desc, api = Value;
-}
-
-case class PlayerInfo(id: String, name: String) {
-  private lazy val whisperToName = name.split(" ")(0);
-  def whisperTo: String = s"/w $whisperToName";
-}
 
 case class InlineRollResults(total: String, raw: FacadeIRR)
 case class InlineRoll(expression: String, results: InlineRollResults, rollId: Option[String], signature: Option[String])
@@ -78,11 +68,11 @@ case class ChatContext(player: PlayerInfo, `type`: ChatType.ChatType, raw: ChatM
   def origRoll: Option[String] = raw.origRoll.toOption;
 
   def reply(msg: String): Unit = {
-    sendChat("API Framework", s"${player.whisperTo} <p>$msg</p>");
+    APIUtils.sendChat("API Framework", player.whisperTo.message(s"<p>$msg</p>"));
   }
 
   def reply(sender: String, msg: String): Unit = {
-    sendChat(sender, s"${player.whisperTo} <p>$msg</p>");
+    APIUtils.sendChat(sender, player.whisperTo.message(s"<p>$msg</p>"));
   }
 
   def toDetailedString(): String = {

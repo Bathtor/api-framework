@@ -22,13 +22,14 @@
  * SOFTWARE.
  *
  */
-package com.larskroll.roll20.api
+package com.lkroll.roll20.api
 
 import scalajs.js
 import js.annotation._
-import com.larskroll.roll20.api.facade.Roll20API
+import com.lkroll.roll20.api.facade.Roll20API
 import Roll20API.{ Roll20Object, ChatMessage }
-import com.larskroll.roll20.sheet.{ DefaultSerialiser, Serialiser, ListMultiMap, FieldLike }
+import com.lkroll.roll20.core.{ DefaultSerialiser, Serialiser, FieldLike }
+import com.lkroll.roll20.util.ListMultiMap
 import scala.scalajs.js.Dynamic.{ global => dynGlobal, literal => dynLiteral }
 import scala.concurrent.{ Future, Promise, ExecutionContext }
 import collection.mutable

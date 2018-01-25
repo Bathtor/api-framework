@@ -22,11 +22,11 @@
  * SOFTWARE.
  *
  */
-package com.larskroll.roll20.api.conf
+package com.lkroll.roll20.api.conf
 
 import org.rogach.scallop._
-import com.larskroll.roll20.api.APIOptionsException
-import com.larskroll.roll20.api.facade.Roll20API
+import com.lkroll.roll20.api.APIOptionsException
+import com.lkroll.roll20.api.facade.Roll20API
 
 abstract class ScallopAPIConf(args: Seq[String] = Nil) extends ScallopConfBase(args) {
 

@@ -22,20 +22,11 @@
  * SOFTWARE.
  *
  */
-package com.larskroll.roll20.api
+package com.lkroll.roll20.api
 
-import com.larskroll.roll20.api.facade.Roll20API;
+import com.lkroll.roll20.api.facade.Roll20API;
+import com.lkroll.roll20.core._
 
-sealed trait ChatOutMessage {
-  def render: String;
-}
-
-final case class SimpleMessage(message: String) extends ChatOutMessage {
-  override def render: String = message;
-}
-final case class ToMessage(to: String, msg: String) extends ChatOutMessage { // FIXME extract Chat types into separate project and reuse
-  override def render: String = s"$to $msg";
-}
 trait APIUtils {
 
   def extractSimpleRowId(id: String): String = id.split('_').last;
@@ -45,7 +36,6 @@ trait APIUtils {
     val sas = s"player|${speakingAs.id}";
     Roll20API.sendChat(sas, input.render);
   }
-
-  implicit def str2ChatMessage(s: String): ChatOutMessage = SimpleMessage(s);
-  def to(target: String)(msg: String): ChatOutMessage = ToMessage(target, msg);
 }
+
+object APIUtils extends APIUtils;
