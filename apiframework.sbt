@@ -12,8 +12,8 @@ scalacOptions ++= Seq(
 
 libraryDependencies += "com.lkroll.roll20" %%% "roll20-api-facade" % "1.0.0-SNAPSHOT"
 libraryDependencies += "com.lkroll.roll20" %%% "roll20-core" % "0.7.0-SNAPSHOT"
-libraryDependencies += "org.scalactic" %%% "scalactic" % "3.+" % "test"
-libraryDependencies += "org.scalatest" %%% "scalatest" % "3.+" % "test"
+libraryDependencies += "org.scalactic" %%% "scalactic" % "3.0.+" % "test"
+libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.+" % "test"
 libraryDependencies += "com.lihaoyi" %%% "fastparse" % "1.+" % "provided" // needed for TemplateVars parsing
 libraryDependencies += "org.rogach" %%% "scallop" % "3.1.+" % "provided" // needed for ScallopConfig based commands
 

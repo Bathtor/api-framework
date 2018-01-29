@@ -47,7 +47,10 @@ object InlineRoll {
 }
 
 case class ChatContext(player: PlayerInfo, `type`: ChatType.ChatType, raw: ChatMessage) {
-  def selected: List[Roll20Object] = if (raw.selected.isEmpty) { List.empty } else { raw.selected.get.toList };
+  def selected: List[Graphic] = {
+    val objs = if (raw.selected.isEmpty) { List.empty } else { raw.selected.get.toList };
+    objs.flatMap(sel => Graphic.get(sel._id))
+  }
   def target: Option[PlayerInfo] = {
     for {
       target <- raw.target.toOption;
@@ -103,7 +106,7 @@ case class ChatContext(player: PlayerInfo, `type`: ChatType.ChatType, raw: ChatM
       sb ++= s"${indent}selected: {\n";
       indent = "    ";
       sels.foreach { sel =>
-        sb ++= s"${indent}${JSON.stringify(sel)}\n";
+        sb ++= s"${indent}$sel\n";
       }
       indent = "  ";
       sb ++= s"${indent}}\n";

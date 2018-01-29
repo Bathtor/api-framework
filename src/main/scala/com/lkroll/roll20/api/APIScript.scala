@@ -93,7 +93,7 @@ trait APIScript extends APILogging with APIUtils {
       val cmd = args(0).substring(1);
       commands.get(cmd) match {
         case Some(handler) => handler(args, chatctx);
-        case None          => debug(s"No handler found for command ${cmd} in ${args}")
+        case None          => debug(s"No handler found for command ${cmd} in ${args.mkString(" ")}")
       }
     }
   }

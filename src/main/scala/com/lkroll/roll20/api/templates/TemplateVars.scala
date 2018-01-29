@@ -25,23 +25,54 @@
 package com.lkroll.roll20.api.templates
 
 import com.lkroll.roll20.api._
+import com.lkroll.roll20.core._
 import fastparse.all._
 
-case class TemplateVar(key: String, value: Option[String]) {
-  def render: String = s"""{{$key=${renderValue}}}""";
-  def renderValue: String = value.getOrElse("");
-  def stripValue: Option[String] = value.map { v =>
-    if (v.startsWith("[[")) {
-      v.substring(2, v.length() - 2)
-    } else {
-      v
-    }
+sealed trait TemplateVal extends Renderable;
+object TemplateVal {
+  case object Empty extends TemplateVal {
+    override def render: String = "";
+  }
+  case class Raw(s: String) extends TemplateVal {
+    override def render: String = s;
+  }
+  case class TranslationKey(key: String) extends TemplateVal {
+    override def render: String = s"^{$key}";
+  }
+  case class InlineRoll(r: Rolls.InlineRoll[Int]) extends TemplateVal {
+    override def render: String = r.render;
+  }
+  object InlineRoll {
+    def apply(expr: RollExpression[Int]): InlineRoll = InlineRoll(Rolls.InlineRoll(expr));
+  }
+  case class InlineRollRef(index: Int) extends TemplateVal {
+    override def render: String = "$[[" + index + "]]";
+  }
+  case class Number[N: Numeric](v: N) extends TemplateVal {
+    override def render: String = v.toString();
   }
 }
 
+case class TemplateVar(key: String, value: TemplateVal) extends Renderable {
+  override def render: String = s"""{{$key=${value.render}}}""";
+}
+
 object TemplateVar {
-  val parser = P("{{" ~ CharsWhile(c => c != '=' && c != '}').! ~ "=" ~/ CharsWhile(_ != '}').!.? ~ "}}")
-    .map(t => TemplateVar(t._1, t._2));
+  import TemplateVal._;
+  import CoreImplicits._;
+
+  val parser = P("{{" ~ keyParser ~ "=" ~/ valueParser ~ "}}").map(t => TemplateVar(t._1, t._2));
+  val keyParser: P[String] = P(CharsWhile(c => c != '=' && c != '{' && c != '}').!);
+  val valueParser: P[TemplateVal] = P(emptyValueParser | translationLabelParser | inlineRollParser | inlineRollRefParser | rawParser);
+
+  val emptyValueParser: P[TemplateVal] = P(&("}}")).map(_ => Empty);
+  val inlineRollRefParser: P[TemplateVal] = P("$[[" ~/ ws ~ CharIn('0' to '9').rep(1).! ~ ws ~ "]]").map(s => InlineRollRef(s.toInt));
+  val inlineRollParser: P[TemplateVal] = P("[[" ~/ ws ~ ArithmeticParsers.intExpression ~ ws ~ "]]").map(e => InlineRoll(e));
+  val translationLabelParser: P[TemplateVal] = P("^{" ~/ CharsWhile(_ != '}').rep.! ~ "}").map(s => TranslationKey(s));
+  val rawParser: P[TemplateVal] = P(CharsWhile(c => c != '=' && c != '{' && c != '}' && c != '^').!).map(s => Raw(s));
+
+  val ws = P(" ".rep);
+
   def fromString(s: String): Option[TemplateVar] = {
     parser.parse(s) match {
       case Parsed.Success(r, _) => Some(r)
@@ -50,19 +81,20 @@ object TemplateVar {
   }
 }
 
-case class TemplateVars(vars: List[TemplateVar]) {
-  def render: String = vars.map(_.render).mkString(" ");
-  def replaceInlineRolls(rolls: List[InlineRoll]): TemplateVars = {
+case class TemplateVars(vars: List[TemplateVar]) extends Renderable {
+  override def render: String = vars.map(_.render).mkString(" ");
+  def replaceInlineRollRefs(rolls: List[InlineRoll], transformer: InlineRoll => TemplateVal): TemplateVars = {
+    val trans2: Function2[InlineRoll, TemplateVar, TemplateVal] = (ir, tv) => transformer(ir);
+    replaceInlineRollRefs(rolls, trans2)
+  }
+  def replaceInlineRollRefs(rolls: List[InlineRoll], transformer: (InlineRoll, TemplateVar) => TemplateVal): TemplateVars = {
     val res = vars.map { tvar =>
-      val newval = tvar.value.map { v =>
-        TemplateVars.inlineRollRefParser.parse(v) match {
-          case Parsed.Success(r, _) => {
-            val ir = rolls(r);
-            val total = ir.results.total;
-            s"[[${total.toString()}]]"
-          }
-          case _ => v
+      val newval = tvar.value match {
+        case TemplateVal.InlineRollRef(index) => {
+          val ir = rolls(index);
+          transformer(ir, tvar)
         }
+        case x => x
       };
       TemplateVar(tvar.key, newval)
     };
@@ -82,10 +114,8 @@ case class TemplateVars(vars: List[TemplateVar]) {
 object TemplateVars extends org.rogach.scallop.ValueConverter[TemplateVars] {
   import org.rogach.scallop._;
 
-  val parser = P(CharsWhile(_ != '{').rep ~ (TemplateVar.parser ~ CharsWhileIn(" ").rep).rep ~/ AnyChar.rep)
+  val parser = P(CharsWhile(_ != '{').rep ~ (TemplateVar.parser ~ CharsWhileIn(" ").?).rep ~/ AnyChar.rep)
     .map(s => TemplateVars(s.toList));
-
-  val inlineRollRefParser = P("$[[" ~ CharIn('0' to '9').rep(1).! ~ "]]").map(_.toInt);
 
   def parse(s: List[(String, List[String])]): Either[String, Option[TemplateVars]] =
     s match {
@@ -93,7 +123,7 @@ object TemplateVars extends org.rogach.scallop.ValueConverter[TemplateVars] {
         val s = l.mkString(" "); // reassemble the arg list the way it was before splitting
         parser.parse(s) match {
           case Parsed.Success(r, _) => Right(Some(r))
-          case f: Parsed.Failure    => Left(f.toString())
+          case f: Parsed.Failure    => System.err.println(f.extra.traced.trace); Left(f.toString())
         }
       }
       case Nil => Right(None) // no vars found
