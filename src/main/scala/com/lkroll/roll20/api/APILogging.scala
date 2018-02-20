@@ -74,3 +74,5 @@ trait APILogging {
     }
   }
 }
+
+object APILogger extends APILogging;

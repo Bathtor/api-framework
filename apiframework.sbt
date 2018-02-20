@@ -4,14 +4,14 @@ name := "Roll20 API Framework"
 
 organization := "com.lkroll.roll20"
 
-version := "0.3.0-SNAPSHOT"
+version := "0.4.1-SNAPSHOT"
 
 scalacOptions ++= Seq(
     "-P:scalajs:suppressExportDeprecations"
 )
 
 libraryDependencies += "com.lkroll.roll20" %%% "roll20-api-facade" % "1.0.0-SNAPSHOT"
-libraryDependencies += "com.lkroll.roll20" %%% "roll20-core" % "0.8.0-SNAPSHOT"
+libraryDependencies += "com.lkroll.roll20" %%% "roll20-core" % "0.10.0-SNAPSHOT"
 libraryDependencies += "org.scalactic" %%% "scalactic" % "3.0.4" % "test"
 libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.4" % "test"
 libraryDependencies += "com.lihaoyi" %%% "fastparse" % "1.+" % "provided" // needed for TemplateVars parsing

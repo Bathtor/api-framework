@@ -28,7 +28,6 @@ import scalajs.js
 import js.annotation._
 import com.lkroll.roll20.api.facade.Roll20API
 import Roll20API.{ Roll20Object, ChatMessage }
-import com.lkroll.roll20.core.{ DefaultSerialiser, Serialiser, FieldLike }
 import com.lkroll.roll20.util.ListMultiMap
 import scala.scalajs.js.Dynamic.{ global => dynGlobal, literal => dynLiteral }
 import scala.concurrent.{ Future, Promise, ExecutionContext }
@@ -42,14 +41,6 @@ trait APIScriptRoot extends APIScript {
   @JSExport
   def load() {
     val allChildren = (children ++ readyChildren);
-    val aggFieldS = allChildren.foldLeft(this.fieldSerialisers)((acc, child) => acc ++ child.fieldSerialisers);
-    val aggTypeS = allChildren.foldLeft(this.typeSerialisers)((acc, child) => acc ++ child.typeSerialisers);
-    this.fieldSerialisers = aggFieldS;
-    this.typeSerialisers = aggTypeS;
-    allChildren.foreach { child =>
-      child.fieldSerialisers = aggFieldS;
-      child.typeSerialisers = aggTypeS;
-    }
     subscriptions.foreach { t: (String, Seq[js.Function]) =>
       {
         val (k, callbacks) = t;
@@ -60,13 +51,6 @@ trait APIScriptRoot extends APIScript {
       }
     }
     children.foreach(_.internal_load());
-    debug("------ Registered Serialisers -------");
-    fieldSerialisers.foreach {
-      case (f, s) => debug(s"${f} -> ${s.getClass.getName}")
-    }
-    typeSerialisers.foreach {
-      case (t, s) => debug(s"${t} -> ${s.getClass.getName}")
-    }
   }
 
   onReady {
@@ -98,10 +82,6 @@ trait APIScript extends APILogging with APIUtils {
     }
   }
 
-  private[api] var fieldSerialisers = Map.empty[String, Serialiser[Any]];
-  private[api] var typeSerialisers = List.empty[(Class[Any], Serialiser[Any])];
-  val defaultSerialiser = DefaultSerialiser;
-
   private[api] var ready: Boolean = false;
   def isReady: Boolean = this.ready;
 
@@ -117,31 +97,6 @@ trait APIScript extends APILogging with APIUtils {
           debug(s"${this.getClass.getName}: subscribing callback on trigger: ${k}.");
           Roll20API.on(k, c)
         }
-      }
-    }
-  }
-
-  def register[T](f: FieldLike[T], s: Serialiser[T]) {
-    fieldSerialisers += (f.accessor -> s.asInstanceOf[Serialiser[Any]]); // just throw away the type info
-  }
-
-  def register[T: reflect.ClassTag](s: Serialiser[T]) {
-    val staticClass: Class[Any] = reflect.classTag[T].runtimeClass.asInstanceOf[Class[Any]];
-    typeSerialisers ::= (staticClass -> s.asInstanceOf[Serialiser[Any]])
-  }
-
-  private def checkTypeHierarchies(cls: Class[_]): Option[Serialiser[Any]] = {
-    typeSerialisers.find({
-      case (targetCls, ser) => targetCls.isAssignableFrom(cls)
-    }).map(_._2)
-  }
-
-  def serialise[T](f: FieldLike[T], v: T): js.Any = {
-    fieldSerialisers.get(f.accessor) match {
-      case Some(s) => s.serialise(v)
-      case None => checkTypeHierarchies(v.getClass()) match {
-        case Some(s) => s.serialise(v)
-        case None    => defaultSerialiser.serialise(v)
       }
     }
   }
