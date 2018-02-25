@@ -24,10 +24,16 @@
  */
 package com.lkroll.roll20.api
 
+import scalajs.js
+import scalajs.js.JSON
 import com.lkroll.roll20.api.facade.Roll20API;
 import com.lkroll.roll20.core._
+import concurrent.{ Future, Promise, ExecutionContext }
+import util.{ Try, Success, Failure }
 
 trait APIUtils {
+
+  implicit def ec: ExecutionContext;
 
   def extractSimpleRowId(id: String): String = id.split('_').last;
 
@@ -36,6 +42,47 @@ trait APIUtils {
     val sas = s"player|${speakingAs.id}";
     Roll20API.sendChat(sas, input.render);
   }
+  def rollViaChat[T](roll: Rolls.SimpleRoll[T])(implicit reader: Readable[T]): Future[T] = {
+    val p = Promise[String]();
+    Roll20API.sendChat("API Framework", roll.render, extractRollSimple(_, p));
+    p.future.transform(readTransformer(reader))
+  }
+  def rollViaChat[T](roll: Rolls.InlineRoll[T])(implicit reader: Readable[T]): Future[T] = {
+    val p = Promise[String]();
+    Roll20API.sendChat("API Framework", roll.render, extractRollInline(_, p));
+    p.future.transform(readTransformer(reader))
+  }
+
+  private def readTransformer[T](reader: Readable[T]): Try[String] => Try[T] = {
+    case Success(s) => Try(reader.read(s).get)
+    case Failure(e) => Failure(e)
+  }
+
+  private def extractRollSimple[T](replies: js.Array[Roll20API.ChatMessage], promise: Promise[String]): Unit = {
+    try {
+      val reply = ChatContext.fromMsg(replies.head);
+      //APILogger.debug(s"Roll20 Roll: ${reply.toDetailedString()}");
+      assert(reply.`type` == ChatType.rollresult);
+      val result = JSON.parse(reply.raw.content).asInstanceOf[Roll20API.InlineRollResults];
+      promise.success(result.total.toString());
+    } catch {
+      case e: Throwable => promise.failure(e)
+    }
+  }
+
+  private def extractRollInline[T](replies: js.Array[Roll20API.ChatMessage], promise: Promise[String]): Unit = {
+    try {
+      val reply = ChatContext.fromMsg(replies.head);
+      //APILogger.debug(s"Roll20 Roll: ${reply.toDetailedString()}");
+      assert(reply.`type` == ChatType.general);
+      val result = reply.inlineRolls.head.results.total;
+      promise.success(result);
+    } catch {
+      case e: Throwable => promise.failure(e)
+    }
+  }
 }
 
-object APIUtils extends APIUtils;
+object APIUtils extends APIUtils {
+  implicit val ec: ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.runNow;
+}

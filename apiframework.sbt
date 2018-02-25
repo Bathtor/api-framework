@@ -4,13 +4,13 @@ name := "Roll20 API Framework"
 
 organization := "com.lkroll.roll20"
 
-version := "0.4.1-SNAPSHOT"
+version := "0.4.2-SNAPSHOT"
 
 scalacOptions ++= Seq(
     "-P:scalajs:suppressExportDeprecations"
 )
 
-libraryDependencies += "com.lkroll.roll20" %%% "roll20-api-facade" % "1.0.0-SNAPSHOT"
+libraryDependencies += "com.lkroll.roll20" %%% "roll20-api-facade" % "1.1.0-SNAPSHOT"
 libraryDependencies += "com.lkroll.roll20" %%% "roll20-core" % "0.10.0-SNAPSHOT"
 libraryDependencies += "org.scalactic" %%% "scalactic" % "3.0.4" % "test"
 libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.4" % "test"

@@ -117,16 +117,40 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
   // TODO _defaulttoken	""	A JSON string that contains the data for the Character's default token if one is set. Note that this is a "blob" similar to "bio" and "notes", so you must pass a callback function to get(). Read-only.
 
   def attributesForName(name: String): List[Attribute] = Attribute.find(name, this.id);
-  override def attribute[T](field: FieldLike[T]): Option[FieldAttribute[T]] = Attribute.findSingle(field, this.id);
-  override def attributes[T](field: FieldLike[T]): List[FieldAttribute[T]] = Attribute.findAll(field, this.id);
+  /**
+   * Gets the current value of the field indicated by `name`.
+   *
+   * Works for fields at default value.
+   */
+  def attributeValue[T](name: String): Option[Any] = {
+    getAttrByName(this.id, name).toOption
+  }
+  /**
+   * Gets the current value of the `field`, converted to `T`.
+   *
+   * Works for fields at default value.
+   *
+   * @return `None` if either the field does not exist, or the conversion failed, and `Some(T)` otherwise.
+   */
+  def attributeValue[T](field: FieldLike[T]): Option[T] = {
+    getAttrByName(this.id, field.qualifiedAttr).toOption.flatMap(s => field.read(s.toString))
+  }
+
+  override def attribute[T](field: FieldLike[T]): FieldAttribute[T] = getAttribute(field).orElse {
+    val attr = Attribute.create(this.id, field.qualifiedAttr);
+    attr.current = field.initialValue;
+    Some(attr.typed(field))
+  } get;
+  override def getAttribute[T](field: FieldLike[T]): Option[FieldAttribute[T]] = Attribute.findSingle(field, this.id);
+  //override def attributes[T](field: FieldLike[T]): List[FieldAttribute[T]] = Attribute.findAll(field, this.id);
   override def repeating[T](field: FieldLike[T]): List[FieldAttribute[T]] = Attribute.findRepeating(field, this.id);
-  override def at[T](rowId: String)(field: FieldLike[T]): List[FieldAttribute[T]] = Attribute.findRepeating(field, this.id, rowId);
+  override def at[T](rowId: String)(field: FieldLike[T]): Option[FieldAttribute[T]] = Attribute.findRepeating(field, this.id, rowId);
   def cached(): AttributeCache = {
     val query = js.Dynamic.literal(
       "type" -> Roll20ObjectTypes.attribute,
       Attribute.Properties.characterid -> this.id);
     val res = findObjs(query).toList.map(o => new Attribute(o));
-    new AttributeCache(res)
+    new AttributeCache(res, this)
   }
   def withCache(f: AttributeCache => Unit): Unit = {
     f(this.cached());
@@ -137,261 +161,3 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
   override def toString(): String = s"Character(${js.JSON.stringify(raw)})";
 }
 
-trait AttributeContext {
-  def attribute[T](field: FieldLike[T]): Option[FieldAttribute[T]];
-  def attributes[T](field: FieldLike[T]): List[FieldAttribute[T]]; // not sure this actually makes any sense
-  def repeating[T](field: FieldLike[T]): List[FieldAttribute[T]];
-  def at[T](rowId: String)(field: FieldLike[T]): List[FieldAttribute[T]];
-}
-
-class AttributeCache(val attributes: List[Attribute]) extends AttributeContext {
-  // TODO build a nice prefix tree from attributes to search this more efficiently
-
-  override def attribute[T](field: FieldLike[T]): Option[FieldAttribute[T]] = {
-    val res = attributes.find(a => a.name.equals(field.qualifiedAttr));
-    res.map(a => a.typed(field))
-  }
-  override def attributes[T](field: FieldLike[T]): List[FieldAttribute[T]] = {
-    val res = attributes.filter(a => a.name.equals(field.qualifiedAttr));
-    res.map(a => a.typed(field))
-  }
-  override def repeating[T](field: FieldLike[T]): List[FieldAttribute[T]] = {
-    val nameMatcher = field.nameMatcher;
-    val matcher: Attribute => Boolean = (a: Attribute) => nameMatcher(a.name);
-    val res = attributes.filter(matcher);
-    res.map(a => a.typed(field))
-  }
-  override def at[T](rowId: String)(field: FieldLike[T]): List[FieldAttribute[T]] = {
-    val nameMatcher = field.nameMatcherRow(rowId);
-    val matcher: Attribute => Boolean = (a: Attribute) => nameMatcher(a.name);
-    val res = attributes.filter(matcher);
-    res.map(a => a.typed(field))
-  }
-}
-
-object Attribute {
-  def create(characterId: String, name: String): Attribute = {
-    val attr = js.Dynamic.literal(_characterid = characterId, name = name).asInstanceOf[AttributeCreate];
-    val attrObj = createObj(Roll20ObjectTypes.attribute, attr);
-    assert(attrObj.get(Roll20Managed.Properties.`type`).asInstanceOf[String] == Roll20ObjectTypes.attribute);
-    new Attribute(attrObj)
-  }
-
-  def get(id: String): Option[Attribute] = {
-    val attrObj = getObj(Roll20ObjectTypes.attribute, id).toOption;
-    attrObj.map(o => new Attribute(o))
-  }
-
-  private def findRaw(name: String, characterId: String): List[Roll20Object] = {
-    val query = js.Dynamic.literal(
-      "type" -> Roll20ObjectTypes.attribute,
-      Properties.name -> name,
-      Properties.characterid -> characterId);
-    val res = findObjs(query);
-    res.toList
-  }
-
-  def find(name: String, characterId: String): List[Attribute] = {
-    val res = findRaw(name, characterId);
-    res.map(o => new Attribute(o))
-  }
-
-  def findSingle[T](field: FieldLike[T], characterId: String): Option[FieldAttribute[T]] = {
-    val res = findRaw(field.qualifiedAttr, characterId);
-    if (res.size > 1) {
-      APILogger.warn(s"Skipping ${res.size - 1} attribute results and returning head.");
-    }
-    res match {
-      case head :: _ => Some(new FieldAttribute(field, head))
-      case Nil       => None
-    }
-  }
-
-  def findAll[T](field: FieldLike[T], characterId: String): List[FieldAttribute[T]] = {
-    val res = findRaw(field.qualifiedAttr, characterId);
-    res.map(o => new FieldAttribute(field, o))
-  }
-
-  def findMatching(fieldMatcher: Attribute => Boolean, characterId: String): List[Attribute] = {
-    val query = js.Dynamic.literal(
-      "type" -> Roll20ObjectTypes.attribute,
-      Properties.characterid -> characterId);
-    val res = findObjs(query).toList;
-    res.map(o => new Attribute(o)).filter(fieldMatcher)
-  }
-
-  def findRepeating[T](field: FieldLike[T], characterId: String): List[FieldAttribute[T]] = {
-    val nameMatcher = field.nameMatcher;
-    val matcher: Attribute => Boolean = (a: Attribute) => nameMatcher(a.name);
-    val res = findMatching(matcher, characterId);
-    res.map(a => a.typed(field))
-  }
-
-  def findRepeating[T](field: FieldLike[T], characterId: String, rowId: String): List[FieldAttribute[T]] = {
-    val nameMatcher = field.nameMatcherRow(rowId);
-    val matcher: Attribute => Boolean = (a: Attribute) => nameMatcher(a.name);
-    val res = findMatching(matcher, characterId);
-    res.map(a => a.typed(field))
-  }
-
-  object Properties {
-    val characterid = "_characterid";
-    val name = "name";
-    val current = "current";
-    val max = "max";
-  }
-
-  val rowIdPattern = raw"repeating_[a-zA-Z]+_([-a-zA-Z0-9]+)_.*".r;
-}
-
-class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
-  import Attribute._;
-
-  /**
-   * ID of the character this attribute belongs to. Read-only.
-   */
-  def characterId: String = raw.get(Properties.characterid).asInstanceOf[String];
-  def character: Character = Character.get(characterId).get;
-
-  def name: String = raw.get(Properties.name).asInstanceOf[String];
-  def name_=(s: String): Unit = raw.set(Properties.name, s);
-
-  /**
-   * Try to extract the rowId from the name, if this is an attribute in a repeating section.
-   */
-  def getRowId: Option[String] = name match {
-    case rowIdPattern(rowId) => Some(rowId)
-    case _                   => None
-  }
-
-  /**
-   * The current value of the attribute can be accessed in chat and macros with the syntax
-   * @{Character Name|Attribute Name} or in abilities with the syntax @{Attribute Name}.
-   */
-  def current: String = raw.get(Properties.current).asInstanceOf[String];
-  def current_=(s: String): Unit = raw.set(Properties.current, s);
-  /**
-   * The max value of the attribute can be accessed in chat and macros with the syntax
-   * @{Character Name|Attribute Name|max} or in abilities with the syntax @{Attribute Name|max}.
-   */
-  def max: String = raw.get(Properties.max).asInstanceOf[String];
-  def max_=(s: String): Unit = raw.set(Properties.max, s);
-
-  override def toString(): String = s"Attribute(${js.JSON.stringify(raw)})";
-
-  /**
-   * Returns this attribute as typed by the given field.
-   */
-  def typed[T](f: FieldLike[T]): FieldAttribute[T] = {
-    //assert(this.name == f.name); // doesn't hold for repeating sections
-    new FieldAttribute(f, this.raw);
-  }
-}
-
-/**
- * Typed version of an attribute, based on SheetModel fields.
- *
- * @tparam T type of the attribute
- */
-class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Object) extends Attribute(_raw) {
-
-  /**
-   * Get the current value of the attributed converted to `T` via the field's readable instance.
-   */
-  def apply(): T = {
-    val rawV = if (field.isMax) { super.max } else { super.current };
-    val vO = field.read(rawV);
-    vO.get
-  }
-
-  /**
-   * Get the current value of the attributed converted to `T` via the field's readable instance, as on `Option`
-   * in case the conversion doesn't work (or the field is actually empty).
-   */
-  def get: Option[T] = {
-    val rawV = if (field.isMax) { super.max } else { super.current };
-    field.read(rawV)
-  }
-
-  /**
-   * Update the current value, converting `T` to string via the provided
-   * [[com.lkroll.roll20.core.StringSerialiser]].
-   */
-  def <<=(t: T)(implicit ser: StringSerialiser[T]): Unit = {
-    val stringV = ser.serialise(t);
-    if (field.isMax) {
-      super.max = stringV;
-    } else {
-      super.current = stringV;
-    };
-
-  }
-}
-
-object Ability {
-  def create(characterId: String, name: String): Ability = {
-    val ab = js.Dynamic.literal(_characterid = characterId, name = name).asInstanceOf[AbilityCreate];
-    val abObj = createObj(Roll20ObjectTypes.ability, ab);
-    assert(abObj.get(Roll20Managed.Properties.`type`).asInstanceOf[String] == Roll20ObjectTypes.ability);
-    new Ability(abObj)
-  }
-
-  def get(id: String): Option[Ability] = {
-    val abObj = getObj(Roll20ObjectTypes.ability, id).toOption;
-    abObj.map(o => new Ability(o))
-  }
-
-  def find(name: String, characterId: String): List[Ability] = {
-    val query = js.Dynamic.literal(
-      "type" -> Roll20ObjectTypes.ability,
-      Properties.name -> name,
-      Properties.characterid -> characterId);
-    val res = findObjs(query);
-    res.map(o => new Ability(o)).toList
-  }
-
-  def findAll(characterId: String): List[Ability] = {
-    val query = js.Dynamic.literal(
-      "type" -> Roll20ObjectTypes.ability,
-      Properties.characterid -> characterId);
-    val res = findObjs(query);
-    res.map(o => new Ability(o)).toList
-  }
-
-  object Properties {
-    val characterid = "_characterid";
-    val name = "name";
-    val description = "description";
-    val action = "action";
-    val istokenaction = "istokenaction";
-  }
-}
-
-class Ability private (val raw: Roll20Object) extends Roll20Managed {
-  import Ability._;
-
-  /**
-   * ID of the character this ability belongs to. Read-only.
-   */
-  def characterId: String = raw.get(Properties.characterid).asInstanceOf[String];
-  def character: Character = Character.get(characterId).get;
-  def name: String = raw.get(Properties.name).asInstanceOf[String];
-  def name_=(s: String): Unit = raw.set(Properties.name, s);
-  /**
-   * The description does not appear in the character sheet interface.
-   */
-  def description: String = raw.get(Properties.description).asInstanceOf[String];
-  def description_=(s: String): Unit = raw.set(Properties.description, s);
-  /**
-   * The text of the ability.
-   */
-  def action: String = raw.get(Properties.action).asInstanceOf[String];
-  def action_=(s: String): Unit = raw.set(Properties.action, s);
-  /**
-   * Is this ability a token action that should show up when tokens linked to its parent Character are selected?
-   */
-  def isTokenAction: Boolean = raw.get(Properties.istokenaction).asInstanceOf[Boolean];
-  def isTokenAction_=(b: Boolean): Unit = raw.set(Properties.istokenaction, b);
-
-  override def toString(): String = s"Ability(${js.JSON.stringify(raw)})";
-}

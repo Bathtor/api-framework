@@ -25,6 +25,7 @@
 package com.lkroll.roll20.api
 
 import com.lkroll.roll20.api.facade.Roll20API
+import concurrent.ExecutionContext
 
 class APIOptionsException(message: String, val replyWith: Option[String] = None) extends Exception(message) {
 
@@ -55,6 +56,9 @@ object APIOptionsException {
 }
 
 trait APICommand[C] extends APILogging with APIUtils {
+
+  implicit val ec: ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.runNow;
+
   def command: String;
   def options: Function[Array[String], C];
   def apply(config: C, ctx: ChatContext): Unit;
