@@ -37,6 +37,21 @@ object Attribute {
     new Attribute(attrObj)
   }
 
+  def create[T](characterId: String, field: FieldLike[T]): FieldAttribute[T] = {
+    val attr = create(characterId, field.qualifiedAttr);
+    attr.typed(field)
+  }
+
+  def createRepeating[T](characterId: String, field: FieldLike[T], providedRowId: Option[String] = None): FieldAttribute[T] = {
+    val rowId = providedRowId match {
+      case Some(s) => s
+      case None    => APIUtils.generateRowId()
+    };
+    val name = field.accessor(rowId);
+    val attr = create(characterId, name);
+    attr.typed(field)
+  }
+
   def get(id: String): Option[Attribute] = {
     val attrObj = getObj(Roll20ObjectTypes.attribute, id).toOption;
     attrObj.map(o => new Attribute(o))

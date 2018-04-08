@@ -24,10 +24,11 @@
  */
 package com.lkroll.roll20.api
 
-import com.lkroll.roll20.core.CoreImplicits
+import com.lkroll.roll20.core.{ CoreImplicits, PrimitiveStringSerialisers }
 
-trait APIImplicits extends CoreImplicits {
+trait APIImplicits extends CoreImplicits with PrimitiveStringSerialisers {
   implicit def token2Entry(l: List[(Token, Int)]): List[TurnOrder.Entry] = l.map(t => TurnOrder.TokenEntry(t._1.id, t._2.toString()))
+
 }
 
 object APIImplicits extends APIImplicits;
