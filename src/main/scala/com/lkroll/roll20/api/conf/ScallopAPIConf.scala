@@ -38,6 +38,8 @@ abstract class ScallopAPIConf(args: Seq[String] = Nil) extends ScallopConfBase(a
   def helpString(): String = helpString(builder);
 
   private def helpString(bldr: Scallop): String = {
+    bldr.setHelpWidth(Int.MaxValue);
+
     val sb = new StringBuilder();
 
     bldr.vers foreach { v => sb.append("<p>"); sb.append(v.replaceAll("\n", "<br />")); sb.append("</p>"); }
