@@ -25,6 +25,7 @@
 package com.lkroll.roll20.api
 
 import com.lkroll.roll20.api.facade.Roll20API
+import com.lkroll.roll20.core.{ Renderable, APIButton }
 import concurrent.ExecutionContext
 
 class APIOptionsException(message: String, val replyWith: Option[String] = None) extends Exception(message) {
@@ -73,4 +74,18 @@ trait APICommand[C] extends APILogging with APIUtils {
       }
     }
   }
+
+  def invoke(label: String, args: List[OptionApplication] = Nil): APIButton = {
+    import APIImplicits._;
+    args match {
+      case Nil => APIButton(label, command)
+      case _ => {
+        val params = args.map(a => a.render).mkString(" ", " ", "");
+        val cmd = command + params;
+        APIButton(label, cmd)
+      }
+    }
+  }
 }
+
+trait OptionApplication extends Renderable;
