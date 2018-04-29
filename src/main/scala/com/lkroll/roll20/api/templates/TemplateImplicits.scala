@@ -40,6 +40,8 @@ trait TemplateImplicits {
   implicit def num2tv[N: Numeric](n: N): TemplateVal = TemplateVal.Number(n);
   implicit def roll2tv(r: Rolls.InlineRoll[Int]): TemplateVal = TemplateVal.InlineRoll(r);
   implicit def rollx2tv(r: RollExpression[Int]): TemplateVal = TemplateVal.InlineRoll(r);
+  implicit def btn2tv(b: APIButton): TemplateVal = TemplateVal.Raw(b.render);
+
   def templateApplication(template: String, vars: TemplateVar*): String = {
     vars.foldLeft(s"&{template:$template}")((acc, v) => acc + v.render)
   }
