@@ -114,7 +114,7 @@ object Graphic {
   }
 }
 
-abstract class Graphic protected (val raw: Roll20Object) extends Roll20Managed {
+sealed abstract class Graphic protected (val raw: Roll20Object) extends Roll20Managed {
   import Graphic._;
 
   /**

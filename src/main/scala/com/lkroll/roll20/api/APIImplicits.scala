@@ -29,7 +29,7 @@ import org.rogach.scallop._
 import com.lkroll.roll20.api.conf._
 
 trait APIImplicits extends CoreImplicits with PrimitiveStringSerialisers {
-  implicit def token2Entry(l: List[(Token, Int)]): List[TurnOrder.Entry] = l.map(t => TurnOrder.TokenEntry(t._1.id, t._2.toString()))
+  implicit def token2Entry(l: List[(Token, Int)]): List[TurnOrder.Entry] = l.map(t => TurnOrder.TokenEntry(t._1.id, Left(t._2)));
 
   implicit class ApplicableOption[T](opt: ScallopOption[T]) {
     def <<=(v: T): OptionApplication = {

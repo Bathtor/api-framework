@@ -101,24 +101,36 @@ class Campaign(val raw: Roll20API.Roll20Object) extends Roll20Managed {
 object TurnOrder {
   sealed trait Entry {
     def id: String;
-    def pr: String;
+    def pr: Either[Int, String];
+    def prString: String = pr match {
+      case Left(i)  => i.toString
+      case Right(s) => s
+    };
     def custom: String;
-    def write(): String = s"""{"id" : "$id", "pr" : "$pr", "custom" : "$custom"}""";
+    def write(): String = s"""{"id" : "$id", "pr" : "$prString", "custom" : "$custom"}""";
   }
-  case class CustomEntry(custom: String, pr: String) extends Entry {
+  case class CustomEntry(custom: String, pr: Either[Int, String]) extends Entry {
     override def id: String = "-1";
   }
-  case class TokenEntry(id: String, pr: String) extends Entry {
+  case class TokenEntry(id: String, pr: Either[Int, String]) extends Entry {
     override def custom: String = "";
   }
 
   def readEntry(raw: js.Dynamic): Try[Entry] = {
     Try {
       if (raw.id.asInstanceOf[String] == "-1") {
-        CustomEntry(raw.custom.asInstanceOf[String], raw.pr.asInstanceOf[String])
+        CustomEntry(raw.custom.asInstanceOf[String], readPr(raw.pr))
       } else {
-        TokenEntry(raw.id.asInstanceOf[String], raw.pr.asInstanceOf[String])
+        TokenEntry(raw.id.asInstanceOf[String], readPr(raw.pr))
       }
+    }
+  }
+
+  def readPr(raw: js.Dynamic): Either[Int, String] = {
+    val s = raw.toString; // could be either a number or a string
+    Try(s.trim.toInt) match {
+      case Success(i) => Left(i)
+      case Failure(_) => Right(s)
     }
   }
 }
@@ -180,8 +192,30 @@ class TurnOrder(private val campaign: Campaign) {
     modify(l => l ++ el)
   }
 
-  def sort(): Unit = {
-    modify(_.sortBy(_.pr))
+  def sortAsc(): Unit = {
+    modify(_.sortWith({
+      case (left, right) => {
+        (left.pr, right.pr) match {
+          case (Left(li), Left(ri))   => li < ri
+          case (Left(li), Right(rs))  => li.toString < rs
+          case (Right(ls), Left(ri))  => ls < ri.toString
+          case (Right(ls), Right(rs)) => ls < rs
+        }
+      }
+    }))
+  }
+
+  def sortDesc(): Unit = {
+    modify(_.sortWith({
+      case (left, right) => {
+        (left.pr, right.pr) match {
+          case (Left(li), Left(ri))   => li > ri
+          case (Left(li), Right(rs))  => li.toString > rs
+          case (Right(ls), Left(ri))  => ls > ri.toString
+          case (Right(ls), Right(rs)) => ls > rs
+        }
+      }
+    }))
   }
 
   def dedup(keepFirst: Boolean = false): Unit = {

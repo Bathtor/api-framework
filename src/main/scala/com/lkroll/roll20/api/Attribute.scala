@@ -149,13 +149,13 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
    * The current value of the attribute can be accessed in chat and macros with the syntax
    * @{Character Name|Attribute Name} or in abilities with the syntax @{Attribute Name}.
    */
-  def current: String = raw.get(Properties.current).asInstanceOf[String];
+  def current: String = raw.get(Properties.current).toString;
   def current_=(s: String): Unit = raw.set(Properties.current, s);
   /**
    * The max value of the attribute can be accessed in chat and macros with the syntax
    * @{Character Name|Attribute Name|max} or in abilities with the syntax @{Attribute Name|max}.
    */
-  def max: String = raw.get(Properties.max).asInstanceOf[String];
+  def max: String = raw.get(Properties.max).toString;
   def max_=(s: String): Unit = raw.set(Properties.max, s);
 
   override def toString(): String = s"Attribute(${js.JSON.stringify(raw)})";
@@ -192,6 +192,14 @@ class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Objec
   def get: Option[T] = {
     val rawV = if (field.isMax) { super.max } else { super.current };
     field.read(rawV)
+  }
+
+  /**
+   * Get the current value of the attributed converted to `T` via the field's readable instance,
+   * or the default value in case the conversion doesn't work or the field is actually empty.
+   */
+  def getOrDefault: T = {
+    this.get.getOrElse(field.read(field.initialValue).get)
   }
 
   /**
