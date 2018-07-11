@@ -50,7 +50,7 @@ trait AttributeContext {
   /**
    * Fetch the instance at `rowId` of this repeating section attribute, if it exists.
    */
-  def reapeatingAt[T](rowId: String)(field: FieldLike[T]): Option[FieldAttribute[T]];
+  def repeatingAt[T](rowId: String)(field: FieldLike[T]): Option[FieldAttribute[T]];
 
   def createAttribute[T](field: FieldLike[T]): FieldAttribute[T];
   def createRepeating[T](field: FieldLike[T], providedRowId: Option[String] = None): FieldAttribute[T];
@@ -80,7 +80,7 @@ class AttributeCache(private var attributes: List[Attribute], val character: Cha
     val res = attributes.filter(matcher);
     res.map(a => a.typed(field))
   }
-  override def reapeatingAt[T](rowId: String)(field: FieldLike[T]): Option[FieldAttribute[T]] = {
+  override def repeatingAt[T](rowId: String)(field: FieldLike[T]): Option[FieldAttribute[T]] = {
     val nameMatcher = field.nameMatcherRow(rowId);
     val matcher: Attribute => Boolean = (a: Attribute) => nameMatcher(a.name);
     val res = attributes.filter(matcher);

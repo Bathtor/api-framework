@@ -50,10 +50,6 @@ trait APIImplicits extends CoreImplicits with PrimitiveStringSerialisers {
   implicit class StringApplicableOption(opt: String) {
     def <<=(v: String): OptionApplication = StringAppliedOption(opt, v);
   }
-
-  implicit class StringRenderable(s: String) extends Renderable {
-    override def render: String = s;
-  }
 }
 
 object APIImplicits extends APIImplicits;
