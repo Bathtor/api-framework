@@ -52,8 +52,24 @@ trait AttributeContext {
    */
   def repeatingAt[T](rowId: String)(field: FieldLike[T]): Option[FieldAttribute[T]];
 
+  /**
+   * Fetch all items in all rows of the given repeating section.
+   */
+  def repeatingSection[T](sectionName: String): List[Attribute];
+
   def createAttribute[T](field: FieldLike[T]): FieldAttribute[T];
   def createRepeating[T](field: FieldLike[T], providedRowId: Option[String] = None): FieldAttribute[T];
+}
+
+object AttributeMatchers {
+  def repeatingSection(sectionName: String): Attribute => Boolean = {
+    val pattern = s"""repeating_${sectionName}_[-a-zA-Z0-9]+_.*""".r;
+    val nameMatcher: String => Boolean = (s: String) => s match {
+      case pattern() => true
+      case _         => false
+    }
+    (a: Attribute) => nameMatcher(a.name)
+  }
 }
 
 class AttributeCache(private var attributes: List[Attribute], val character: Character) extends AttributeContext {
@@ -91,6 +107,10 @@ class AttributeCache(private var attributes: List[Attribute], val character: Cha
       case head :: _ => Some(head.typed(field))
       case Nil       => None
     }
+  }
+  override def repeatingSection[T](sectionName: String): List[Attribute] = {
+    val matcher = AttributeMatchers.repeatingSection(sectionName);
+    attributes.filter(matcher)
   }
   // TODO Must deal with cache invalidation before implementing these
   override def createAttribute[T](field: FieldLike[T]): FieldAttribute[T] = ???;

@@ -95,6 +95,11 @@ object Attribute {
     res.map(o => new Attribute(o)).filter(fieldMatcher)
   }
 
+  def findRepeating(sectionName: String, characterId: String): List[Attribute] = {
+    val matcher = AttributeMatchers.repeatingSection(sectionName);
+    findMatching(matcher, characterId)
+  }
+
   def findRepeating[T](field: FieldLike[T], characterId: String): List[FieldAttribute[T]] = {
     val nameMatcher = field.nameMatcher;
     val matcher: Attribute => Boolean = (a: Attribute) => nameMatcher(a.name);
@@ -151,12 +156,14 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
    */
   def current: String = raw.get(Properties.current).toString;
   def current_=(s: String): Unit = raw.set(Properties.current, s);
+  def currentWithWorker(s: String): Unit = raw.setWithWorker(js.Dynamic.literal(Properties.current -> s));
   /**
    * The max value of the attribute can be accessed in chat and macros with the syntax
    * @{Character Name|Attribute Name|max} or in abilities with the syntax @{Attribute Name|max}.
    */
   def max: String = raw.get(Properties.max).toString;
   def max_=(s: String): Unit = raw.set(Properties.max, s);
+  def maxWithWorker(s: String): Unit = raw.setWithWorker(js.Dynamic.literal(Properties.max -> s));
 
   override def toString(): String = s"Attribute(${js.JSON.stringify(raw)})";
 
@@ -203,7 +210,7 @@ class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Objec
   }
 
   /**
-   * Update the current value, converting `T` to string via the provided
+   * Update the field value, converting `T` to string via the provided
    * [[com.lkroll.roll20.core.StringSerialiser]].
    */
   def <<=(t: T)(implicit ser: StringSerialiser[T]): Unit = {
@@ -213,6 +220,19 @@ class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Objec
     } else {
       super.current = stringV;
     };
+  }
 
+  /**
+   * Update the field value, converting `T` to string via the provided
+   * [[com.lkroll.roll20.core.StringSerialiser]].
+   * Also trigger associated sheet workers.
+   */
+  def setWithWorker(t: T)(implicit ser: StringSerialiser[T]): Unit = {
+    val stringV = ser.serialise(t);
+    if (field.isMax) {
+      super.maxWithWorker(stringV);
+    } else {
+      super.currentWithWorker(stringV);
+    };
   }
 }

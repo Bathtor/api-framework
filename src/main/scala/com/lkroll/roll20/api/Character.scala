@@ -145,6 +145,7 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
   //override def attributes[T](field: FieldLike[T]): List[FieldAttribute[T]] = Attribute.findAll(field, this.id);
   override def repeating[T](field: FieldLike[T]): List[FieldAttribute[T]] = Attribute.findRepeating(field, this.id);
   override def repeatingAt[T](rowId: String)(field: FieldLike[T]): Option[FieldAttribute[T]] = Attribute.findRepeating(field, this.id, rowId);
+  override def repeatingSection[T](sectionName: String): List[Attribute] = Attribute.findRepeating(sectionName, this.id);
   override def createAttribute[T](field: FieldLike[T]): FieldAttribute[T] = Attribute.create(this.id, field);
   override def createRepeating[T](field: FieldLike[T], providedRowId: Option[String] = None): FieldAttribute[T] = Attribute.createRepeating(this.id, field, providedRowId);
 
