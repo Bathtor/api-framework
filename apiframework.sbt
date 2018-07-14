@@ -4,7 +4,7 @@ name := "Roll20 API Framework"
 
 organization := "com.lkroll.roll20"
 
-version := "0.8.2-SNAPSHOT"
+version := "0.8.3-SNAPSHOT"
 
 scalaVersion := "2.12.4"
 

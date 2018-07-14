@@ -50,6 +50,14 @@ object Character {
     cObj.map(o => new Character(o))
   }
 
+  def find(name: String): List[Character] = {
+    val query = js.Dynamic.literal(
+      "type" -> Roll20ObjectTypes.character,
+      Properties.name -> name);
+    val res = findObjs(query);
+    res.toList.map(o => new Character(o))
+  }
+
   object Properties {
     val avatar = "avatar";
     val name = "name";
