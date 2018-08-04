@@ -32,7 +32,7 @@ abstract class ScallopAPIConf(args: Seq[String] = Nil) extends ScallopConfBase(a
 
   import org.rogach.scallop.exceptions._;
 
-  override protected def guessOptionNameDefault: Boolean = false
+  override protected def optionNameGuessingSupported: Boolean = false;
   override protected def performOptionNameGuessing() {}
 
   def helpString(): String = helpString(builder);

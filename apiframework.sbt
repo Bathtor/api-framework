@@ -4,9 +4,9 @@ name := "Roll20 API Framework"
 
 organization := "com.lkroll.roll20"
 
-version := "0.8.3-SNAPSHOT"
+version := "0.8.4-SNAPSHOT"
 
-scalaVersion := "2.12.4"
+scalaVersion := "2.12.6"
 
 scalacOptions ++= Seq(
     "-P:scalajs:suppressExportDeprecations"

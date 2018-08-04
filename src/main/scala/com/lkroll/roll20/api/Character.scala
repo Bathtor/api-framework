@@ -170,6 +170,8 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
   def abilitiesForName(name: String): List[Ability] = Ability.find(name, this.id);
   def abilities: List[Ability] = Ability.findAll(this.id);
 
+  def rollButton(label: String, roll: String): String = s"[$label](~${this.name}|$roll)";
+
   override def toString(): String = s"Character(${js.JSON.stringify(raw)})";
 }
 
