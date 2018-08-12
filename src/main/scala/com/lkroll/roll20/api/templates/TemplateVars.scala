@@ -25,7 +25,7 @@
 package com.lkroll.roll20.api.templates
 
 import com.lkroll.roll20.api._
-import com.lkroll.roll20.core._
+import com.lkroll.roll20.core.{ APIButton => CoreButton, _ }
 import fastparse.all._
 
 sealed trait TemplateVal extends Renderable;
@@ -50,6 +50,9 @@ object TemplateVal {
   }
   case class Number[N: Numeric](v: N) extends TemplateVal {
     override def render: String = v.toString();
+  }
+  case class APIButton(button: CoreButton) extends TemplateVal {
+    override def render: String = button.render;
   }
 }
 

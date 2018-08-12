@@ -47,3 +47,7 @@ case class BooleanOption(opt: ScallopOption[Boolean], value: Boolean) extends Op
 case class ListOption[S](opt: ScallopOption[List[S]], value: S, renderer: S => String) extends OptionApplication {
   override def render: String = s"--${opt.name} ${renderer(value)}";
 }
+
+case class OptionOption[T](opt: ScallopOption[Option[T]], value: Option[T], renderer: T => String) extends OptionApplication {
+  override def render: String = s"--${opt.name} ${value.map(renderer).getOrElse("None")}";
+}

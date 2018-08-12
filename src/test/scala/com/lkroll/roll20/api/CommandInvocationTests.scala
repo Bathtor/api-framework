@@ -42,6 +42,18 @@ class CommandInvocation extends FunSuite with Matchers {
     button.render shouldBe ("[testl](!test --arg1 testvalue --arg2 5)");
   }
 
+  test("Should invoke commands with option args") {
+    val conf = new TestConf(List.empty);
+    val button = TestCommand.invoke(
+      "testl",
+      List(conf.arg1 <<= "testvalue", conf.arg6 <<? Some("test")));
+    button.render shouldBe ("[testl](!test --arg1 testvalue --arg6 test)");
+    val button2 = TestCommand.invoke(
+      "testl",
+      List(conf.arg1 <<= "testvalue", conf.arg6 <<? Option.empty[String]));
+    button2.render shouldBe ("[testl](!test --arg1 testvalue --arg6 None)");
+  }
+
   test("Should invoke commands with scallop args") {
     val conf = new TestConf(List.empty);
     val button = TestCommand.invoke(
@@ -78,5 +90,9 @@ class TestConf(_args: Seq[String]) extends ScallopAPIConf(_args) {
   val arg3 = opt[Int]("arg3");
   val arg4 = opt[List[String]]("arg4");
   val arg5 = opt[List[Int]]("arg5");
+  val arg6 = opt[String]("arg6").map {
+    case "None" => None
+    case x      => Some(x)
+  };
   verify();
 }

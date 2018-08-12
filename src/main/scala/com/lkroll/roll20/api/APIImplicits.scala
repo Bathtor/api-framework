@@ -34,10 +34,17 @@ trait APIImplicits extends CoreImplicits with PrimitiveStringSerialisers {
   implicit class ApplicableOption[T](opt: ScallopOption[T]) {
     def <<=(v: T): OptionApplication = {
       v match {
-        case s: String  => AppliedOption(opt.asInstanceOf[ScallopOption[String]], s, DefaultOptionRenderers.str)
-        case b: Boolean => BooleanOption(opt.asInstanceOf[ScallopOption[Boolean]], b)
-        case _          => AppliedOption(opt, v, DefaultOptionRenderers.trivial[T])
+        case s: String    => AppliedOption(opt.asInstanceOf[ScallopOption[String]], s, DefaultOptionRenderers.str)
+        case b: Boolean   => BooleanOption(opt.asInstanceOf[ScallopOption[Boolean]], b)
+        case o: Option[_] => throw new RuntimeException("Use <<? instead <<= for option values!")
+        case _            => AppliedOption(opt, v, DefaultOptionRenderers.trivial[T])
       }
+    }
+    def <<?[S](v: S)(implicit ev: T =:= Option[S]): OptionApplication = {
+      OptionOption(opt.asInstanceOf[ScallopOption[Option[S]]], Some(v), DefaultOptionRenderers.trivial[S])
+    }
+    def <<?[S](v: Option[S])(implicit ev: T =:= Option[S]): OptionApplication = {
+      OptionOption(opt.asInstanceOf[ScallopOption[Option[S]]], v, DefaultOptionRenderers.trivial[S])
     }
     def <<=[S](v: S)(implicit ev: T =:= List[S]): OptionApplication = {
       v match {
