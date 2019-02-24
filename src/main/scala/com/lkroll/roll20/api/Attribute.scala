@@ -25,6 +25,7 @@
 package com.lkroll.roll20.api
 
 import scalajs.js
+import scala.concurrent.{ Future, Promise }
 import com.lkroll.roll20.api.facade.Roll20API._
 import com.lkroll.roll20.api.facade.Roll20Objects._
 import com.lkroll.roll20.core.{ FieldLike, StringSerialiser }
@@ -156,14 +157,24 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
    */
   def current: String = raw.get(Properties.current).toString;
   def current_=(s: String): Unit = raw.set(Properties.current, s);
-  def currentWithWorker(s: String): Unit = raw.setWithWorker(js.Dynamic.literal(Properties.current -> s));
+  def currentWithWorker(s: String): Future[Unit] = {
+    val p = Promise[Unit];
+    onSheetWorkerCompleted(() => p.success(()));
+    raw.setWithWorker(js.Dynamic.literal(Properties.current -> s));
+    p.future
+  }
   /**
    * The max value of the attribute can be accessed in chat and macros with the syntax
    * @{Character Name|Attribute Name|max} or in abilities with the syntax @{Attribute Name|max}.
    */
   def max: String = raw.get(Properties.max).toString;
   def max_=(s: String): Unit = raw.set(Properties.max, s);
-  def maxWithWorker(s: String): Unit = raw.setWithWorker(js.Dynamic.literal(Properties.max -> s));
+  def maxWithWorker(s: String): Future[Unit] = {
+    val p = Promise[Unit];
+    onSheetWorkerCompleted(() => p.success(()));
+    raw.setWithWorker(js.Dynamic.literal(Properties.max -> s));
+    p.future
+  }
 
   override def toString(): String = s"Attribute(${js.JSON.stringify(raw)})";
 
@@ -227,7 +238,7 @@ class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Objec
    * [[com.lkroll.roll20.core.StringSerialiser]].
    * Also trigger associated sheet workers.
    */
-  def setWithWorker(t: T)(implicit ser: StringSerialiser[T]): Unit = {
+  def setWithWorker(t: T)(implicit ser: StringSerialiser[T]): Future[Unit] = {
     val stringV = ser.serialise(t);
     if (field.isMax) {
       super.maxWithWorker(stringV);
