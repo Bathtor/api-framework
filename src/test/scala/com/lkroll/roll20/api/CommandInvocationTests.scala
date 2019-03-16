@@ -26,6 +26,7 @@ package com.lkroll.roll20.api
 
 import org.scalatest._
 import com.lkroll.roll20.api.conf._
+import com.lkroll.roll20.core.TemplateRef
 
 class CommandInvocation extends FunSuite with Matchers {
   import APIImplicits._;
@@ -82,6 +83,7 @@ object TestCommand extends APICommand[TestConf] {
   override def apply(config: TestConf, ctx: ChatContext): Unit = {
     ???
   }
+  override def outputTemplate: Option[TemplateRef] = None;
 }
 
 class TestConf(_args: Seq[String]) extends ScallopAPIConf(_args) {

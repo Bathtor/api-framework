@@ -57,6 +57,7 @@ object APIOptionsException {
 }
 
 trait APICommand[C] extends APILogging with APIUtils {
+  import scalatags.Text.all._;
 
   implicit val ec: ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.runNow;
 
@@ -70,7 +71,13 @@ trait APICommand[C] extends APILogging with APIUtils {
     } catch {
       case sapie: APIOptionsException => {
         error(sapie);
-        sapie.replyWith.foreach(ctx.reply(_));
+
+        val tO: Option[Tag] = sapie.replyWith.map(s => p(raw(s)));
+        if (sapie.getMessage.contains("help")) {
+          tO.foreach(ctx.reply(s"API Help for ${command}", _));
+        } else {
+          tO.foreach(ctx.replyError(_));
+        }
       }
     }
   }

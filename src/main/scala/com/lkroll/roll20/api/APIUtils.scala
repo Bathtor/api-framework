@@ -33,8 +33,15 @@ import util.{ Try, Success, Failure }
 
 trait APIUtils {
 
+  /*
+   *  Required
+   */
   implicit def ec: ExecutionContext;
+  def outputTemplate: Option[TemplateRef];
 
+  /*
+   * Provided
+   */
   def extractSimpleRowId(id: String): String = id.split('_').last;
 
   /**
@@ -62,11 +69,57 @@ trait APIUtils {
     builder.toList
   }
 
-  def sendChat(speakingAs: String, input: ChatOutMessage): Unit = Roll20API.sendChat(speakingAs, input.render);
-  def sendChat(speakingAs: PlayerInfo, input: ChatOutMessage): Unit = {
-    val sas = s"player|${speakingAs.id}";
-    Roll20API.sendChat(sas, input.render);
+  def sendChat(speakingAs: String, input: APIChatOutMessage): Unit = {
+    sendChat(speakingAs, None, input)
   }
+  def sendChat(speakingAs: String, title: String, input: APIChatOutMessage): Unit = {
+    sendChat(speakingAs, Some(title), input)
+  }
+
+  def sendChat(speakingAs: String, title: Option[String], input: APIChatOutMessage): Unit = {
+    val titleS = title.getOrElse("API Message");
+    val tMsg = this.msgToTemplate(titleS, input);
+    Roll20API.sendChat(speakingAs, tMsg.render);
+  }
+  def sendChatWarning(speakingAs: String, input: APIChatOutMessage): Unit = {
+    val tMsg = this.msgToTemplate("API Warning", input, isWarning = true);
+    Roll20API.sendChat(speakingAs, tMsg.render);
+  }
+  def sendChatError(speakingAs: String, input: APIChatOutMessage): Unit = {
+    val tMsg = this.msgToTemplate("API Error", input, isError = true);
+    Roll20API.sendChat(speakingAs, tMsg.render);
+  }
+
+  def sendChat(speakingAs: PlayerInfo, input: APIChatOutMessage): Unit = {
+    val sas = s"player|${speakingAs.id}";
+    sendChat(speakingAs, None, input)
+  }
+  def sendChat(speakingAs: PlayerInfo, title: String, input: APIChatOutMessage): Unit = {
+    sendChat(speakingAs, Some(title), input)
+  }
+  def sendChat(speakingAs: PlayerInfo, title: Option[String] = None, input: APIChatOutMessage): Unit = {
+    val sas = s"player|${speakingAs.id}";
+    sendChat(sas, title, input)
+  }
+
+  def sendChatHeader(speakingAs: String, title: String, input: APIChatOutMessage): Unit = {
+    val tMsg = this.msgToTemplate(title, input, showHeader = true, showFooter = false);
+    Roll20API.sendChat(speakingAs, tMsg.render);
+  }
+
+  def sendChatBody(speakingAs: String, input: APIChatOutMessage): Unit = {
+    val tMsg = this.msgToTemplate("UNUSED", input, showHeader = false, showFooter = false);
+    Roll20API.sendChat(speakingAs, tMsg.render);
+  }
+
+  def sendChatFooter(speakingAs: String, input: APIChatOutMessage): Unit = {
+    val tMsg = this.msgToTemplate("UNUSED", input, showHeader = false, showFooter = true);
+    Roll20API.sendChat(speakingAs, tMsg.render);
+  }
+
+  /*
+   * Chat Rolls
+   */
   def rollViaChat[T](roll: Rolls.SimpleRoll[T])(implicit reader: Readable[T]): Future[T] = {
     val p = Promise[String]();
     Roll20API.sendChat("API Framework", roll.render, extractRollSimple(_, p));
@@ -76,6 +129,59 @@ trait APIUtils {
     val p = Promise[String]();
     Roll20API.sendChat("API Framework", roll.render, extractRollInline(_, p));
     p.future.transform(readTransformer(reader))
+  }
+
+  private def msgToTemplate(
+    title:      String,
+    input:      APIChatOutMessage,
+    showHeader: Boolean           = true,
+    showFooter: Boolean           = true,
+    isWarning:  Boolean           = false,
+    isError:    Boolean           = false): ChatOutMessage = {
+    import APIChatOutMessage._;
+
+    val res = input match {
+      case CoreMessage(SimpleMessage(c))       => msgStringToTemplate(title, c, Chat.Default, showHeader, showFooter, isWarning, isError)
+      case CoreMessage(CommandMessage(cmd, c)) => msgStringToTemplate(title, c, cmd, showHeader, showFooter, isWarning, isError)
+      case t: TemplateMessage                  => t.asCore
+    };
+
+    Roll20API.log(s"About to send: ${res.render}");
+    res
+  }
+  private def msgStringToTemplate(
+    titleText:   String,
+    contentText: String,
+    cmd:         ChatCommand,
+    showHeader:  Boolean     = true,
+    showFooter:  Boolean     = true,
+    isWarning:   Boolean     = false,
+    isError:     Boolean     = false): ChatOutMessage = {
+    import scalatags.Text.all._;
+    import com.lkroll.roll20.api.templates._;
+    import TemplateImplicits._;
+
+    require(!(isWarning && isError), "A message can only be either a warning or an error, not both!");
+
+    val res = outputTemplate match {
+      case Some(ot) => {
+        import ModelExtraImplicits._;
+
+        val appl = ot.fillWith(
+          ModelOutputTemplate.Fields.showHeader <<= showHeader,
+          ModelOutputTemplate.Fields.showFooter <<= showHeader,
+          ModelOutputTemplate.Fields.isWarning <<= isWarning,
+          ModelOutputTemplate.Fields.isError <<= isError,
+          ModelOutputTemplate.Fields.titleField <<= titleText,
+          ModelOutputTemplate.Fields.contentField <<= contentText);
+        cmd.message(appl.render)
+      }
+      case None => {
+        val msg = frag(h2(titleText), p(contentText));
+        cmd.message(msg.render)
+      }
+    };
+    res
   }
 
   private def readTransformer[T](reader: Readable[T]): Try[String] => Try[T] = {
@@ -110,6 +216,12 @@ trait APIUtils {
 
 object APIUtils extends APIUtils {
   implicit val ec: ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.runNow;
+  override def outputTemplate: Option[TemplateRef] = None;
+}
+
+case class ContextAPIUtils(context: ChatContext) extends APIUtils {
+  implicit val ec: ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.runNow;
+  override def outputTemplate: Option[TemplateRef] = context.outputTemplate;
 }
 
 /**

@@ -51,13 +51,20 @@ object TemplateVal {
   case class Number[N: Numeric](v: N) extends TemplateVal {
     override def render: String = v.toString();
   }
+  case class BooleanVal(b: Boolean) extends TemplateVal {
+    override def render: String = if (b) "1" else "";
+  }
   case class APIButton(button: CoreButton) extends TemplateVal {
     override def render: String = button.render;
   }
 }
 
 case class TemplateVar(key: String, value: TemplateVal) extends Renderable {
-  override def render: String = s"""{{$key=${value.render}}}""";
+  override def render: String = value match {
+    case TemplateVal.Empty             => "" // unset var
+    case TemplateVal.BooleanVal(false) => "" // unset var
+    case _                             => s"""{{$key=${value.render}}}"""
+  }
 }
 
 object TemplateVar {

@@ -27,6 +27,7 @@ package com.lkroll.roll20.api.conf
 import org.rogach.scallop._
 import com.lkroll.roll20.api.APIOptionsException
 import com.lkroll.roll20.api.facade.Roll20API
+import scalatags.Text.all._
 
 abstract class ScallopAPIConf(args: Seq[String] = Nil) extends ScallopConfBase(args) {
 
@@ -37,15 +38,23 @@ abstract class ScallopAPIConf(args: Seq[String] = Nil) extends ScallopConfBase(a
 
   def helpString(): String = helpString(builder);
 
+  private def nl2br(s: String): String = s.replaceAll("\n", br.render);
+
   private def helpString(bldr: Scallop): String = {
-    bldr.setHelpWidth(Int.MaxValue);
+    val wideBuilder = bldr.setHelpWidth(Int.MaxValue);
 
     val sb = new StringBuilder();
 
-    bldr.vers foreach { v => sb.append("<p>"); sb.append(v.replaceAll("\n", "<br />")); sb.append("</p>"); }
-    bldr.bann foreach { b => sb.append("<p>"); sb.append(b.replaceAll("\n", "<br />")); sb.append("</p>"); }
-    sb.append(bldr.help.replaceAll("\n", "<br />"));
-    bldr.foot foreach { f => sb.append("<p>"); sb.append(f.replaceAll("\n", "<br />")); sb.append("</p>"); }
+    wideBuilder.vers.map(v => p(raw(nl2br(v)))).foreach { tag => sb.append(tag.render); };
+    wideBuilder.bann.map(b => p(raw(nl2br(b)))).foreach { tag => sb.append(tag.render); };
+    sb.append(h4("Options").render);
+    val helpTag = div(
+      cls := "sheet-cmd-help",
+      raw("<p>"),
+      raw(wideBuilder.help.replaceAll("\n", "<p/><p>")),
+      raw("</p>"));
+    sb.append(helpTag.render);
+    wideBuilder.foot.map(f => p(raw(nl2br(f)))).foreach { tag => sb.append(tag.render); };
 
     sb.toString()
   }

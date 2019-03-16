@@ -24,7 +24,7 @@
  */
 package com.lkroll.roll20.api
 
-import com.lkroll.roll20.core.{ CoreImplicits, PrimitiveStringSerialisers, Renderable }
+import com.lkroll.roll20.core.{ ChatCommand, ChatOutMessage, CoreImplicits, PrimitiveStringSerialisers, Renderable }
 import org.rogach.scallop._
 import com.lkroll.roll20.api.conf._
 
@@ -57,6 +57,13 @@ trait APIImplicits extends CoreImplicits with PrimitiveStringSerialisers {
   implicit class StringApplicableOption(opt: String) {
     def <<=(v: String): OptionApplication = StringAppliedOption(opt, v);
   }
+
+  implicit class ChatCommandExt(cmd: ChatCommand) {
+    def templateMessage(tapp: templates.TemplateApplication): APIChatOutMessage = {
+      APIChatOutMessage.TemplateMessage(cmd, tapp)
+    }
+  }
+  implicit def com2apicom(c: ChatOutMessage): APIChatOutMessage = APIChatOutMessage.CoreMessage(c);
 }
 
 object APIImplicits extends APIImplicits;

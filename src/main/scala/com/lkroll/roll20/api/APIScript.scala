@@ -70,7 +70,7 @@ trait APIScript extends APILogging with APIUtils {
   private var commandsSubscribed: Boolean = false;
   private val commandsSubscription: Function1[ChatMessage, Unit] = (msg) => {
     if (msg.`type` == "api") {
-      val chatctx = ChatContext.fromMsg(msg);
+      val chatctx = ChatContext.fromMsg(msg, outputTemplate);
       val args = msg.content.split("\\s+");
       assert(args.length >= 1);
       assert(args(0).startsWith("!"));

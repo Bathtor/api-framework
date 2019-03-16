@@ -153,7 +153,7 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
 
   /**
    * The current value of the attribute can be accessed in chat and macros with the syntax
-   * @{Character Name|Attribute Name} or in abilities with the syntax @{Attribute Name}.
+   * &#64;{Character Name|Attribute Name} or in abilities with the syntax &#64;{Attribute Name}.
    */
   def current: String = raw.get(Properties.current).toString;
   def current_=(s: String): Unit = raw.set(Properties.current, s);
@@ -165,7 +165,7 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
   }
   /**
    * The max value of the attribute can be accessed in chat and macros with the syntax
-   * @{Character Name|Attribute Name|max} or in abilities with the syntax @{Attribute Name|max}.
+   * &#64;{Character Name|Attribute Name|max} or in abilities with the syntax &#64;{Attribute Name|max}.
    */
   def max: String = raw.get(Properties.max).toString;
   def max_=(s: String): Unit = raw.set(Properties.max, s);
@@ -222,7 +222,7 @@ class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Objec
 
   /**
    * Update the field value, converting `T` to string via the provided
-   * [[com.lkroll.roll20.core.StringSerialiser]].
+   * [[com.lkroll.roll20.core.StringSerialiser[T] StringSerialiser]].
    */
   def <<=(t: T)(implicit ser: StringSerialiser[T]): Unit = {
     val stringV = ser.serialise(t);
@@ -235,7 +235,10 @@ class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Objec
 
   /**
    * Update the field value, converting `T` to string via the provided
-   * [[com.lkroll.roll20.core.StringSerialiser]].
+   * [[com.lkroll.roll20.core.StringSerialiser[T] StringSerialiser]].
+   *
+   * Test [[scala.Unit]]
+   *
    * Also trigger associated sheet workers.
    */
   def setWithWorker(t: T)(implicit ser: StringSerialiser[T]): Future[Unit] = {

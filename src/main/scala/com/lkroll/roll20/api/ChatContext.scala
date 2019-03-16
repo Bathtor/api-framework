@@ -28,6 +28,7 @@ import com.lkroll.roll20.api.facade.Roll20API.{ InlineRollResults => FacadeIRR, 
 import com.lkroll.roll20.core._
 import scalajs.js
 import scalajs.js.JSON
+import scalatags.Text.all._
 
 case class InlineRollResults(total: String, raw: FacadeIRR)
 case class InlineRoll(expression: String, results: InlineRollResults, rollId: Option[String], signature: Option[String])
@@ -46,7 +47,16 @@ object InlineRoll {
   }
 }
 
-case class ChatContext(player: PlayerInfo, `type`: ChatType.ChatType, raw: ChatMessage) {
+class ChatContext(
+  val player:         PlayerInfo,
+  val `type`:         ChatType.ChatType,
+  val raw:            ChatMessage,
+  val outputTemplate: Option[TemplateRef]) {
+
+  import APIImplicits._;
+
+  private lazy val utils: APIUtils = ContextAPIUtils(this);
+
   def selected: List[Graphic] = {
     val objs = if (raw.selected.isEmpty) { List.empty } else { raw.selected.get.toList };
     objs.flatMap(sel => Graphic.get(sel._id))
@@ -70,12 +80,53 @@ case class ChatContext(player: PlayerInfo, `type`: ChatType.ChatType, raw: ChatM
 
   def origRoll: Option[String] = raw.origRoll.toOption;
 
-  def reply(msg: String): Unit = {
-    APIUtils.sendChat("API Framework", player.whisperTo.message(s"<p>$msg</p>"));
+  def reply(tapp: TemplateApplication): Unit = {
+    utils.sendChat("API Framework", player.whisperTo.templateMessage(tapp));
+  }
+  def reply(msg: String): Unit = reply(p(msg));
+  def replyWarn(msg: String): Unit = replyWarn(p(msg));
+  def replyError(msg: String): Unit = replyError(p(msg));
+  def reply(title: String, msg: String): Unit = reply(title, p(msg));
+  def replyHeader(title: String, msg: String): Unit = replyHeader(title, p(msg));
+  def replyBody(msg: String): Unit = replyBody(p(msg));
+  def replyFooter(msg: String): Unit = replyFooter(p(msg));
+
+  def reply(msg: Tag): Unit = {
+    utils.sendChat("API Framework", player.whisperTo.message(msg.render));
+  }
+  def replyWarn(msg: Tag): Unit = {
+    utils.sendChatWarning("API Framework", player.whisperTo.message(msg.render));
+  }
+  def replyError(msg: Tag): Unit = {
+    utils.sendChatError("API Framework", player.whisperTo.message(msg.render));
+  }
+  def reply(title: String, msg: Tag): Unit = {
+    utils.sendChat("API Framework", title, player.whisperTo.message(msg.render));
+  }
+  def replyHeader(title: String, msg: Tag): Unit = {
+    utils.sendChatHeader("API Framework", title, player.whisperTo.message(msg.render));
+  }
+  def replyBody(msg: Tag): Unit = {
+    utils.sendChatBody("API Framework", player.whisperTo.message(msg.render));
+  }
+  def replyFooter(msg: Tag): Unit = {
+    utils.sendChatFooter("API Framework", player.whisperTo.message(msg.render));
   }
 
-  def reply(sender: String, msg: String): Unit = {
-    APIUtils.sendChat(sender, player.whisperTo.message(s"<p>$msg</p>"));
+  def replyAs(sender: String, tapp: TemplateApplication): Unit = {
+    utils.sendChat(sender, player.whisperTo.templateMessage(tapp));
+  }
+  def replyAs(sender: String, msg: String): Unit = {
+    utils.sendChat(sender, player.whisperTo.message(s"<p>$msg</p>"));
+  }
+  def replyAs(sender: String, msg: Tag): Unit = {
+    utils.sendChat(sender, player.whisperTo.message(msg.render));
+  }
+  def replyAs(sender: String, title: String, msg: String): Unit = {
+    utils.sendChat(sender, title, player.whisperTo.message(s"<p>$msg</p>"));
+  }
+  def replyAs(sender: String, title: String, msg: Tag): Unit = {
+    utils.sendChat(sender, title, player.whisperTo.message(msg.render));
   }
 
   def toDetailedString(): String = {
@@ -126,5 +177,19 @@ case class ChatContext(player: PlayerInfo, `type`: ChatType.ChatType, raw: ChatM
 }
 
 object ChatContext {
-  def fromMsg(msg: ChatMessage): ChatContext = ChatContext(PlayerInfo(msg.playerid, msg.who), ChatType.withName(msg.`type`), msg);
+  def fromMsg(msg: ChatMessage): ChatContext = new ChatContext(
+    PlayerInfo(msg.playerid, msg.who),
+    ChatType.withName(msg.`type`),
+    msg,
+    None);
+  def fromMsg(msg: ChatMessage, outputTemplate: TemplateRef): ChatContext = new ChatContext(
+    PlayerInfo(msg.playerid, msg.who),
+    ChatType.withName(msg.`type`),
+    msg,
+    Some(outputTemplate));
+  def fromMsg(msg: ChatMessage, outputTemplate: Option[TemplateRef]): ChatContext = new ChatContext(
+    PlayerInfo(msg.playerid, msg.who),
+    ChatType.withName(msg.`type`),
+    msg,
+    outputTemplate);
 }
