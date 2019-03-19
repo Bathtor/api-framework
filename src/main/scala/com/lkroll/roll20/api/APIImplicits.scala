@@ -27,6 +27,7 @@ package com.lkroll.roll20.api
 import com.lkroll.roll20.core.{ ChatCommand, ChatOutMessage, CoreImplicits, PrimitiveStringSerialisers, Renderable }
 import org.rogach.scallop._
 import com.lkroll.roll20.api.conf._
+import scalatags.Text.all._
 
 trait APIImplicits extends CoreImplicits with PrimitiveStringSerialisers {
   implicit def token2Entry(l: List[(Token, Int)]): List[TurnOrder.Entry] = l.map(t => TurnOrder.TokenEntry(t._1.id, Left(t._2)));
@@ -61,6 +62,9 @@ trait APIImplicits extends CoreImplicits with PrimitiveStringSerialisers {
   implicit class ChatCommandExt(cmd: ChatCommand) {
     def templateMessage(tapp: templates.TemplateApplication): APIChatOutMessage = {
       APIChatOutMessage.TemplateMessage(cmd, tapp)
+    }
+    def htmlMessage(t: Tag): APIChatOutMessage = {
+      APIChatOutMessage.CoreMessage(cmd.message(t.render))
     }
   }
   implicit def com2apicom(c: ChatOutMessage): APIChatOutMessage = APIChatOutMessage.CoreMessage(c);

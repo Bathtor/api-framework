@@ -169,7 +169,7 @@ trait APIUtils {
 
         val appl = ot.fillWith(
           ModelOutputTemplate.Fields.showHeader <<= showHeader,
-          ModelOutputTemplate.Fields.showFooter <<= showHeader,
+          ModelOutputTemplate.Fields.showFooter <<= showFooter,
           ModelOutputTemplate.Fields.isWarning <<= isWarning,
           ModelOutputTemplate.Fields.isError <<= isError,
           ModelOutputTemplate.Fields.titleField <<= titleText,
