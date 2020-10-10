@@ -24,10 +24,12 @@
  */
 package com.lkroll.roll20.api.templates
 
-import org.scalatest._;
+import org.scalatest._
+import org.scalatest.funsuite._
+import org.scalatest.matchers.should.Matchers
 import com.lkroll.roll20.core._
 
-class VarParserTests extends FunSuite with Matchers {
+class VarParserTests extends AnyFunSuite with Matchers {
   import TemplateVal._
   import CoreImplicits._
 

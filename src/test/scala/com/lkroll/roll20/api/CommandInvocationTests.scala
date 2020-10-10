@@ -25,10 +25,12 @@
 package com.lkroll.roll20.api
 
 import org.scalatest._
+import org.scalatest.funsuite._
+import org.scalatest.matchers.should.Matchers
 import com.lkroll.roll20.api.conf._
 import com.lkroll.roll20.core.TemplateRef
 
-class CommandInvocation extends FunSuite with Matchers {
+class CommandInvocation extends AnyFunSuite with Matchers {
   import APIImplicits._;
 
   test("Should invoke simple commands") {

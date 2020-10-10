@@ -25,21 +25,23 @@
 package com.lkroll.roll20.api.templates
 
 import com.lkroll.roll20.core._
-import fastparse.WhitespaceApi
+import fastparse._
 
 object ArithmeticParsers {
-  val White = WhitespaceApi.Wrapper{
-    import fastparse.all._
-    NoTrace(" ".rep)
+  // val White = WhitespaceApi.Wrapper{
+  //   import fastparse.all._
+  //   NoTrace(" ".rep)
+  // }
+  implicit val whitespace = { implicit ctx: ParsingRun[_] =>
+    CharsWhileIn(" ", 0)
   }
-  import fastparse.noApi._
-  import White._
 
-  val intExpression: P[ArithmeticExpression[Int]] = P(intLiteral);
-  val floatExpression: P[ArithmeticExpression[Float]] = P(floatLiteral);
-  val intLiteral: P[Arith.Literal[Int]] = P(CharIn('0' to '9').rep(1).!).map(s => Arith.Literal(s.toInt));
-  val floatLiteral: P[Arith.Literal[Float]] = P((CharIn('0' to '9').rep(1) ~ "." ~/ CharIn('0' to '9').rep(1)).!).map(s => Arith.Literal(s.toFloat));
+  def intExpression[_: P]: P[ArithmeticExpression[Int]] = P(intLiteral);
+  def floatExpression[_: P]: P[ArithmeticExpression[Float]] = P(floatLiteral);
+  def intLiteral[_: P]: P[Arith.Literal[Int]] = P(CharIn("0-9").rep(1).!).map(s => Arith.Literal(s.toInt));
+  def floatLiteral[_: P]: P[Arith.Literal[Float]] =
+    P((CharIn("0-9").rep(1) ~ "." ~/ CharIn("0-9").rep(1)).!).map(s => Arith.Literal(s.toFloat));
   // TODO all the rest oO
 
-  def parseInt(s: String): Parsed[ArithmeticExpression[Int]] = intExpression.parse(s);
+  def parseInt(s: String): Parsed[ArithmeticExpression[Int]] = parse(s, intExpression(_));
 }

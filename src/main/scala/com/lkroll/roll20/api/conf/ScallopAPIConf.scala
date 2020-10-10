@@ -45,31 +45,38 @@ abstract class ScallopAPIConf(args: Seq[String] = Nil) extends ScallopConfBase(a
 
     val sb = new StringBuilder();
 
-    wideBuilder.vers.map(v => p(raw(nl2br(v)))).foreach { tag => sb.append(tag.render); };
-    wideBuilder.bann.map(b => p(raw(nl2br(b)))).foreach { tag => sb.append(tag.render); };
+    wideBuilder.vers.map(v => p(raw(nl2br(v)))).foreach { tag =>
+      sb.append(tag.render);
+    };
+    wideBuilder.bann.map(b => p(raw(nl2br(b)))).foreach { tag =>
+      sb.append(tag.render);
+    };
     sb.append(h4("Options").render);
-    val helpTag = div(
-      cls := "sheet-cmd-help",
-      raw("<p>"),
-      raw(wideBuilder.help.replaceAll("\n", "<p/><p>")),
-      raw("</p>"));
+    val helpTag =
+      div(cls := "sheet-cmd-help", raw("<p>"), raw(wideBuilder.help.replaceAll("\n", "<p/><p>")), raw("</p>"));
     sb.append(helpTag.render);
-    wideBuilder.foot.map(f => p(raw(nl2br(f)))).foreach { tag => sb.append(tag.render); };
+    wideBuilder.foot.map(f => p(raw(nl2br(f)))).foreach { tag =>
+      sb.append(tag.render);
+    };
 
     sb.toString()
   }
 
   override def onError(e: Throwable): Unit = e match {
-    case Help("")                  => throw APIOptionsException("User asked for command help.", helpString());
-    case Help(subname)             => throw APIOptionsException("User asked for subcommand help.", helpString(builder.findSubbuilder(subname).get));
+    case Help("") => throw APIOptionsException("User asked for command help.", helpString());
+    case Help(subname) =>
+      throw APIOptionsException("User asked for subcommand help.", helpString(builder.findSubbuilder(subname).get));
     case Version                   => throw APIOptionsException("User asked for version.", builder.vers.mkString);
     case ScallopException(message) => throw APIOptionsException("Parsing error: " + message, message);
-    case other                     => throw APIOptionsException("An error occurred during argument parsing.", "An error occurred during command parsing. Consult the API logs for more information.", other);
+    case other =>
+      throw APIOptionsException("An error occurred during argument parsing.",
+                                "An error occurred during command parsing. Consult the API logs for more information.",
+                                other);
   }
 
   errorMessageHandler = { message =>
     Roll20API.log(Util.format("[%s] Error: %s", printedName, message))
-    sys.exit(1)
+  //sys.exit(1)
   }
 
 }

@@ -25,8 +25,8 @@
 package com.lkroll.roll20.api.templates
 
 import com.lkroll.roll20.api._
-import com.lkroll.roll20.core.{ APIButton => CoreButton, _ }
-import fastparse.all._
+import com.lkroll.roll20.core.{APIButton => CoreButton, _}
+import fastparse._, NoWhitespace._
 
 sealed trait TemplateVal extends Renderable;
 object TemplateVal {
@@ -71,20 +71,25 @@ object TemplateVar {
   import TemplateVal._;
   import CoreImplicits._;
 
-  val parser = P("{{" ~ keyParser ~ "=" ~/ valueParser ~ "}}").map(t => TemplateVar(t._1, t._2));
-  val keyParser: P[String] = P(CharsWhile(c => c != '=' && c != '{' && c != '}').!);
-  val valueParser: P[TemplateVal] = P(emptyValueParser | translationLabelParser | inlineRollParser | inlineRollRefParser | rawParser);
+  def parser[_: P] = P("{{" ~ keyParser ~ "=" ~/ valueParser ~ "}}").map(t => TemplateVar(t._1, t._2));
+  def keyParser[_: P]: P[String] = P(CharsWhile(c => c != '=' && c != '{' && c != '}').!);
+  def valueParser[_: P]: P[TemplateVal] =
+    P(emptyValueParser | translationLabelParser | inlineRollParser | inlineRollRefParser | rawParser);
 
-  val emptyValueParser: P[TemplateVal] = P(&("}}")).map(_ => Empty);
-  val inlineRollRefParser: P[TemplateVal] = P("$[[" ~/ ws ~ CharIn('0' to '9').rep(1).! ~ ws ~ "]]").map(s => InlineRollRef(s.toInt));
-  val inlineRollParser: P[TemplateVal] = P("[[" ~/ ws ~ ArithmeticParsers.intExpression ~ ws ~ "]]").map(e => InlineRoll(e));
-  val translationLabelParser: P[TemplateVal] = P("^{" ~/ CharsWhile(_ != '}').rep.! ~ "}").map(s => TranslationKey(s));
-  val rawParser: P[TemplateVal] = P(CharsWhile(c => c != '=' && c != '{' && c != '}' && c != '^').!).map(s => Raw(s));
+  def emptyValueParser[_: P]: P[TemplateVal] = P(&("}}")).map(_ => Empty);
+  def inlineRollRefParser[_: P]: P[TemplateVal] =
+    P("$[[" ~/ ws ~ CharIn("0-9").rep(1).! ~ ws ~ "]]").map(s => InlineRollRef(s.toInt));
+  def inlineRollParser[_: P]: P[TemplateVal] =
+    P("[[" ~/ ws ~ ArithmeticParsers.intExpression ~ ws ~ "]]").map(e => InlineRoll(e));
+  def translationLabelParser[_: P]: P[TemplateVal] =
+    P("^{" ~/ CharsWhile(_ != '}').rep.! ~ "}").map(s => TranslationKey(s));
+  def rawParser[_: P]: P[TemplateVal] =
+    P(CharsWhile(c => c != '=' && c != '{' && c != '}' && c != '^').!).map(s => Raw(s));
 
-  val ws = P(" ".rep);
+  def ws[_: P] = P(" ".rep);
 
   def fromString(s: String): Option[TemplateVar] = {
-    parser.parse(s) match {
+    parse(s, parser(_)) match {
       case Parsed.Success(r, _) => Some(r)
       case _: Parsed.Failure    => None
     }
@@ -97,7 +102,8 @@ case class TemplateVars(vars: List[TemplateVar]) extends Renderable {
     val trans2: Function2[InlineRoll, TemplateVar, TemplateVal] = (ir, tv) => transformer(ir);
     replaceInlineRollRefs(rolls, trans2)
   }
-  def replaceInlineRollRefs(rolls: List[InlineRoll], transformer: (InlineRoll, TemplateVar) => TemplateVal): TemplateVars = {
+  def replaceInlineRollRefs(rolls: List[InlineRoll],
+                            transformer: (InlineRoll, TemplateVar) => TemplateVal): TemplateVars = {
     val res = vars.map { tvar =>
       val newval = tvar.value match {
         case TemplateVal.InlineRollRef(index) => {
@@ -124,14 +130,15 @@ case class TemplateVars(vars: List[TemplateVar]) extends Renderable {
 object TemplateVars extends org.rogach.scallop.ValueConverter[TemplateVars] {
   import org.rogach.scallop._;
 
-  val parser = P(CharsWhile(_ != '{').rep ~ (TemplateVar.parser ~ CharsWhileIn(" ").?).rep ~/ AnyChar.rep)
-    .map(s => TemplateVars(s.toList));
+  def parser[_: P] =
+    P(CharsWhile(_ != '{').rep ~ (TemplateVar.parser ~ CharsWhileIn(" ").?).rep ~/ AnyChar.rep)
+      .map(s => TemplateVars(s.toList));
 
   def parse(s: List[(String, List[String])]): Either[String, Option[TemplateVars]] =
     s match {
       case (_, l) :: Nil => {
         val s = l.mkString(" "); // reassemble the arg list the way it was before splitting
-        parser.parse(s) match {
+        fastparse.parse(s, parser(_)) match {
           case Parsed.Success(r, _) => Right(Some(r))
           case f: Parsed.Failure    => System.err.println(f.extra.traced.trace); Left(f.toString())
         }

@@ -27,7 +27,7 @@ package com.lkroll.roll20.api
 import scalajs.js
 import com.lkroll.roll20.api.facade.Roll20API._
 import com.lkroll.roll20.api.facade.Roll20Objects._
-import com.lkroll.roll20.core.{ FieldLike, StringSerialiser }
+import com.lkroll.roll20.core.{FieldLike, StringSerialiser}
 import java.net.URL
 
 object Character {
@@ -51,9 +51,7 @@ object Character {
   }
 
   def find(name: String): List[Character] = {
-    val query = js.Dynamic.literal(
-      "type" -> Roll20ObjectTypes.character,
-      Properties.name -> name);
+    val query = js.Dynamic.literal("type" -> Roll20ObjectTypes.character, Properties.name -> name);
     val res = findObjs(query);
     res.toList.map(o => new Character(o))
   }
@@ -74,11 +72,11 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
   import Character._;
 
   /**
-   * URL to an image used for the character.
-   *
-   * See the note about avatar and imgsrc restrictions
-   * at [[https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions Roll20 Docs]].
-   */
+    * URL to an image used for the character.
+    *
+    * See the note about avatar and imgsrc restrictions
+    * at [[https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions Roll20 Docs]].
+    */
   def avatar: URL = {
     val urlS = raw.get(Properties.avatar).asInstanceOf[String];
     new URL(urlS)
@@ -94,11 +92,12 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
   // TODO gmnotes	""	Notes on the character only viewable by the GM. See the note below about accessing the Notes, GMNotes, and bio fields.
   def archived: Boolean = raw.get(Properties.archived).asInstanceOf[Boolean];
   def archived_=(b: Boolean): Unit = raw.set(Properties.archived, b);
+
   /**
-   * Comma-delimited list of player ID who can view this character.
-   *
-   * Use "all" to give all players the ability to view.
-   */
+    * Comma-delimited list of player ID who can view this character.
+    *
+    * Use "all" to give all players the ability to view.
+    */
   def inPlayerJournals: List[String] = {
     val s = raw.get(Properties.inplayerjournals).asInstanceOf[String];
     s.split(",").toList
@@ -109,10 +108,10 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
   }
 
   /**
-   * Comma-delimited list of player IDs who can control and edit this character.
-   *
-   * Use "all" to give all players the ability to edit.
-   */
+    * Comma-delimited list of player IDs who can control and edit this character.
+    *
+    * Use "all" to give all players the ability to edit.
+    */
   def controlledBy: List[String] = {
     val s = raw.get(Properties.controlledby).asInstanceOf[String];
     s.split(",").toList
@@ -125,42 +124,46 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
   // TODO _defaulttoken	""	A JSON string that contains the data for the Character's default token if one is set. Note that this is a "blob" similar to "bio" and "notes", so you must pass a callback function to get(). Read-only.
 
   def attributesForName(name: String): List[Attribute] = Attribute.find(name, this.id);
+
   /**
-   * Gets the current value of the field indicated by `name`.
-   *
-   * Works for fields at default value.
-   */
+    * Gets the current value of the field indicated by `name`.
+    *
+    * Works for fields at default value.
+    */
   def attributeValue[T](name: String): Option[Any] = {
     getAttrByName(this.id, name).toOption
   }
+
   /**
-   * Gets the current value of the `field`, converted to `T`.
-   *
-   * Works for fields at default value.
-   *
-   * @return `None` if either the field does not exist, or the conversion failed, and `Some(T)` otherwise.
-   */
+    * Gets the current value of the `field`, converted to `T`.
+    *
+    * Works for fields at default value.
+    *
+    * @return `None` if either the field does not exist, or the conversion failed, and `Some(T)` otherwise.
+    */
   def attributeValue[T](field: FieldLike[T]): Option[T] = {
     getAttrByName(this.id, field.qualifiedAttr).toOption.flatMap(s => field.read(s.toString))
   }
 
-  override def attribute[T](field: FieldLike[T]): FieldAttribute[T] = getAttribute(field).orElse {
-    val attr = Attribute.create(this.id, field.qualifiedAttr);
-    attr.current = field.initialValue;
-    Some(attr.typed(field))
-  } get;
+  override def attribute[T](field: FieldLike[T]): FieldAttribute[T] =
+    getAttribute(field).orElse {
+      val attr = Attribute.create(this.id, field.qualifiedAttr);
+      attr.current = field.initialValue;
+      Some(attr.typed(field))
+    } get;
   override def getAttribute[T](field: FieldLike[T]): Option[FieldAttribute[T]] = Attribute.findSingle(field, this.id);
   //override def attributes[T](field: FieldLike[T]): List[FieldAttribute[T]] = Attribute.findAll(field, this.id);
   override def repeating[T](field: FieldLike[T]): List[FieldAttribute[T]] = Attribute.findRepeating(field, this.id);
-  override def repeatingAt[T](rowId: String)(field: FieldLike[T]): Option[FieldAttribute[T]] = Attribute.findRepeating(field, this.id, rowId);
-  override def repeatingSection[T](sectionName: String): List[Attribute] = Attribute.findRepeating(sectionName, this.id);
+  override def repeatingAt[T](rowId: String)(field: FieldLike[T]): Option[FieldAttribute[T]] =
+    Attribute.findRepeating(field, this.id, rowId);
+  override def repeatingSection[T](sectionName: String): List[Attribute] =
+    Attribute.findRepeating(sectionName, this.id);
   override def createAttribute[T](field: FieldLike[T]): FieldAttribute[T] = Attribute.create(this.id, field);
-  override def createRepeating[T](field: FieldLike[T], providedRowId: Option[String] = None): FieldAttribute[T] = Attribute.createRepeating(this.id, field, providedRowId);
+  override def createRepeating[T](field: FieldLike[T], providedRowId: Option[String] = None): FieldAttribute[T] =
+    Attribute.createRepeating(this.id, field, providedRowId);
 
   def cached(): AttributeCache = {
-    val query = js.Dynamic.literal(
-      "type" -> Roll20ObjectTypes.attribute,
-      Attribute.Properties.characterid -> this.id);
+    val query = js.Dynamic.literal("type" -> Roll20ObjectTypes.attribute, Attribute.Properties.characterid -> this.id);
     val res = findObjs(query).toList.map(o => new Attribute(o));
     new AttributeCache(res, this)
   }
@@ -174,4 +177,3 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
 
   override def toString(): String = s"Character(${js.JSON.stringify(raw)})";
 }
-

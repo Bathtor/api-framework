@@ -25,10 +25,12 @@
 package com.lkroll.roll20.api.templates
 
 import org.scalatest._;
+import org.scalatest.funsuite._
+import org.scalatest.matchers.should.Matchers
 import com.lkroll.roll20.core._
-import fastparse.core.Parsed
+import fastparse.Parsed
 
-class ArithmeticParsingTests extends FunSuite with Matchers {
+class ArithmeticParsingTests extends AnyFunSuite with Matchers {
   import CoreImplicits._
 
   test("Int literals should parse") {
@@ -37,10 +39,10 @@ class ArithmeticParsingTests extends FunSuite with Matchers {
     matchOrDebug(res, Arith.Literal(10));
   }
 
-  private def matchOrDebug[T](res: Parsed[T, Char, String], expected: T): Unit = {
+  private def matchOrDebug[T](res: Parsed[T], expected: T): Unit = {
     res match {
       case Parsed.Success(r, _)            => r should be (expected)
-      case f: Parsed.Failure[Char, String] => fail(f.extra.traced.trace)
+      case f: Parsed.Failure => fail(f.extra.traced.trace)
     }
   }
 }

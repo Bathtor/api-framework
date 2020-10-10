@@ -24,7 +24,7 @@
  */
 package com.lkroll.roll20.api.templates
 
-import com.lkroll.roll20.core.{ TemplateApplication => CoreTemplateApplication }
+import com.lkroll.roll20.core.{TemplateApplication => CoreTemplateApplication}
 
 case class TemplateApplication(template: TemplateRef, vars: TemplateVars) extends CoreTemplateApplication {
   override def render: String = s"&{template:${template.name}} ${vars.render}";

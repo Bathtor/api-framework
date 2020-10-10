@@ -26,10 +26,10 @@ package com.lkroll.roll20.api
 
 import scalajs.js
 import scalajs.js.JSON
-import com.lkroll.roll20.api.facade.{ Roll20API, Roll20Extras };
+import com.lkroll.roll20.api.facade.{Roll20API, Roll20Extras};
 import com.lkroll.roll20.core._
-import concurrent.{ Future, Promise, ExecutionContext }
-import util.{ Try, Success, Failure }
+import concurrent.{ExecutionContext, Future, Promise}
+import util.{Failure, Success, Try}
 
 trait APIUtils {
 
@@ -45,22 +45,23 @@ trait APIUtils {
   def extractSimpleRowId(id: String): String = id.split('_').last;
 
   /**
-   * Generate a new repeating section rowId with the same code as the sheetworkers use.
-   *
-   * If generating multiple rowIds in a row, make sure to double check for duplicates, as generation is time seeded.
-   *
-   * Alternatively use [[generateRowIds]] or [[RowIdPool]] to manage duplicate avoidance for you.
-   */
+    * Generate a new repeating section rowId with the same code as the sheetworkers use.
+    *
+    * If generating multiple rowIds in a row, make sure to double check for duplicates, as generation is time seeded.
+    *
+    * Alternatively use [[generateRowIds]] or [[RowIdPool]] to manage duplicate avoidance for you.
+    */
   def generateRowId(): String = Roll20Extras.generateRowID();
+
   /**
-   * Generate `n` new repeating section rowIDs with the same code as the sheetworkers use.
-   *
-   * This implementation avoids generating duplicates,
-   * but it will block until it has the full number of IDs available,
-   * potentially wasting processing time.
-   *
-   * Alternatively use [[RowIdPool]] to manage duplicate avoidance for you.
-   */
+    * Generate `n` new repeating section rowIDs with the same code as the sheetworkers use.
+    *
+    * This implementation avoids generating duplicates,
+    * but it will block until it has the full number of IDs available,
+    * potentially wasting processing time.
+    *
+    * Alternatively use [[RowIdPool]] to manage duplicate avoidance for you.
+    */
   def generateRowIds(n: Int): List[String] = {
     var builder = Set.empty[String];
     while (builder.size < n) {
@@ -131,32 +132,32 @@ trait APIUtils {
     p.future.transform(readTransformer(reader))
   }
 
-  private def msgToTemplate(
-    title:      String,
-    input:      APIChatOutMessage,
-    showHeader: Boolean           = true,
-    showFooter: Boolean           = true,
-    isWarning:  Boolean           = false,
-    isError:    Boolean           = false): ChatOutMessage = {
+  private def msgToTemplate(title: String,
+                            input: APIChatOutMessage,
+                            showHeader: Boolean = true,
+                            showFooter: Boolean = true,
+                            isWarning: Boolean = false,
+                            isError: Boolean = false): ChatOutMessage = {
     import APIChatOutMessage._;
 
     val res = input match {
-      case CoreMessage(SimpleMessage(c))       => msgStringToTemplate(title, c, Chat.Default, showHeader, showFooter, isWarning, isError)
-      case CoreMessage(CommandMessage(cmd, c)) => msgStringToTemplate(title, c, cmd, showHeader, showFooter, isWarning, isError)
-      case t: TemplateMessage                  => t.asCore
+      case CoreMessage(SimpleMessage(c)) =>
+        msgStringToTemplate(title, c, Chat.Default, showHeader, showFooter, isWarning, isError)
+      case CoreMessage(CommandMessage(cmd, c)) =>
+        msgStringToTemplate(title, c, cmd, showHeader, showFooter, isWarning, isError)
+      case t: TemplateMessage => t.asCore
     };
 
     Roll20API.log(s"About to send: ${res.render}");
     res
   }
-  private def msgStringToTemplate(
-    titleText:   String,
-    contentText: String,
-    cmd:         ChatCommand,
-    showHeader:  Boolean     = true,
-    showFooter:  Boolean     = true,
-    isWarning:   Boolean     = false,
-    isError:     Boolean     = false): ChatOutMessage = {
+  private def msgStringToTemplate(titleText: String,
+                                  contentText: String,
+                                  cmd: ChatCommand,
+                                  showHeader: Boolean = true,
+                                  showFooter: Boolean = true,
+                                  isWarning: Boolean = false,
+                                  isError: Boolean = false): ChatOutMessage = {
     import scalatags.Text.all._;
     import com.lkroll.roll20.api.templates._;
     import TemplateImplicits._;
@@ -173,7 +174,8 @@ trait APIUtils {
           ModelOutputTemplate.Fields.isWarning <<= isWarning,
           ModelOutputTemplate.Fields.isError <<= isError,
           ModelOutputTemplate.Fields.titleField <<= titleText,
-          ModelOutputTemplate.Fields.contentField <<= contentText);
+          ModelOutputTemplate.Fields.contentField <<= contentText
+        );
         cmd.message(appl.render)
       }
       case None => {
@@ -215,27 +217,27 @@ trait APIUtils {
 }
 
 object APIUtils extends APIUtils {
-  implicit val ec: ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.runNow;
+  implicit val ec: ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.queue;
   override def outputTemplate: Option[TemplateRef] = None;
 }
 
 case class ContextAPIUtils(context: ChatContext) extends APIUtils {
-  implicit val ec: ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.runNow;
+  implicit val ec: ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.queue;
   override def outputTemplate: Option[TemplateRef] = context.outputTemplate;
 }
 
 /**
- * Maintains the last generated rowId to make sure that [[RowIdPool.generateRowId]] never emits duplicates.
- */
+  * Maintains the last generated rowId to make sure that [[RowIdPool.generateRowId]] never emits duplicates.
+  */
 class RowIdPool {
   private var lastId: Option[String] = None;
 
   /**
-   * Generate a new repeating section rowId with the same code as the sheetworkers use.
-   *
-   * This method guarantees that no duplicates will be generated, at the cost of potentially hot-blocking
-   * the execution if fresh ids are requested more rapidly than can be accommodated.
-   */
+    * Generate a new repeating section rowId with the same code as the sheetworkers use.
+    *
+    * This method guarantees that no duplicates will be generated, at the cost of potentially hot-blocking
+    * the execution if fresh ids are requested more rapidly than can be accommodated.
+    */
   def generateRowId(): String = {
     while (true) {
       val id = Roll20Extras.generateRowID();

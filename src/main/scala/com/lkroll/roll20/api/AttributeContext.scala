@@ -27,34 +27,37 @@ package com.lkroll.roll20.api
 import scalajs.js
 import com.lkroll.roll20.api.facade.Roll20API._
 import com.lkroll.roll20.api.facade.Roll20Objects._
-import com.lkroll.roll20.core.{ FieldLike, StringSerialiser }
+import com.lkroll.roll20.core.{FieldLike, StringSerialiser}
 
 trait AttributeContext {
+
   /**
-   * Fetches or creates an attribute for the given field.
-   */
+    * Fetches or creates an attribute for the given field.
+    */
   def attribute[T](field: FieldLike[T]): FieldAttribute[T];
+
   /**
-   * Fetches the attribute for the given field, if it exists.
-   *
-   * Note that Roll20 does not create attribute objects for fields at their default value!
-   */
+    * Fetches the attribute for the given field, if it exists.
+    *
+    * Note that Roll20 does not create attribute objects for fields at their default value!
+    */
   def getAttribute[T](field: FieldLike[T]): Option[FieldAttribute[T]];
   //def attributes[T](field: FieldLike[T]): List[FieldAttribute[T]]; // not sure this actually makes any sense
   /**
-   * Fetch all instances of this repeating section attribute.
-   *
-   * Note: As far as I can tell this also works for fields at their default value.
-   */
+    * Fetch all instances of this repeating section attribute.
+    *
+    * Note: As far as I can tell this also works for fields at their default value.
+    */
   def repeating[T](field: FieldLike[T]): List[FieldAttribute[T]];
+
   /**
-   * Fetch the instance at `rowId` of this repeating section attribute, if it exists.
-   */
+    * Fetch the instance at `rowId` of this repeating section attribute, if it exists.
+    */
   def repeatingAt[T](rowId: String)(field: FieldLike[T]): Option[FieldAttribute[T]];
 
   /**
-   * Fetch all items in all rows of the given repeating section.
-   */
+    * Fetch all items in all rows of the given repeating section.
+    */
   def repeatingSection[T](sectionName: String): List[Attribute];
 
   def createAttribute[T](field: FieldLike[T]): FieldAttribute[T];
@@ -64,10 +67,11 @@ trait AttributeContext {
 object AttributeMatchers {
   def repeatingSection(sectionName: String): Attribute => Boolean = {
     val pattern = s"""repeating_${sectionName}_[-a-zA-Z0-9]+_.*""".r;
-    val nameMatcher: String => Boolean = (s: String) => s match {
-      case pattern() => true
-      case _         => false
-    }
+    val nameMatcher: String => Boolean = (s: String) =>
+      s match {
+        case pattern() => true
+        case _         => false
+      }
     (a: Attribute) => nameMatcher(a.name)
   }
 }
@@ -75,12 +79,13 @@ object AttributeMatchers {
 class AttributeCache(private var attributes: List[Attribute], val character: Character) extends AttributeContext {
   // TODO build a nice prefix tree from attributes to search this more efficiently
 
-  override def attribute[T](field: FieldLike[T]): FieldAttribute[T] = getAttribute(field).orElse {
-    val attr = Attribute.create(character.id, field.qualifiedAttr);
-    attr.current = field.initialValue;
-    attributes ::= attr;
-    Some(attr.typed(field))
-  } get;
+  override def attribute[T](field: FieldLike[T]): FieldAttribute[T] =
+    getAttribute(field).orElse {
+      val attr = Attribute.create(character.id, field.qualifiedAttr);
+      attr.current = field.initialValue;
+      attributes ::= attr;
+      Some(attr.typed(field))
+    } get;
 
   override def getAttribute[T](field: FieldLike[T]): Option[FieldAttribute[T]] = {
     val res = attributes.find(a => a.name.equals(field.qualifiedAttr));

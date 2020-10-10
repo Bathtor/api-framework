@@ -24,7 +24,7 @@
  */
 package com.lkroll.roll20.api
 
-import com.lkroll.roll20.api.facade.Roll20API.{ InlineRollResults => FacadeIRR, InlineRoll => FacadeIR, _ }
+import com.lkroll.roll20.api.facade.Roll20API.{InlineRollResults => FacadeIRR, InlineRoll => FacadeIR, _}
 import com.lkroll.roll20.core._
 import scalajs.js
 import scalajs.js.JSON
@@ -47,18 +47,21 @@ object InlineRoll {
   }
 }
 
-class ChatContext(
-  val player:         PlayerInfo,
-  val `type`:         ChatType.ChatType,
-  val raw:            ChatMessage,
-  val outputTemplate: Option[TemplateRef]) {
+class ChatContext(val player: PlayerInfo,
+                  val `type`: ChatType.ChatType,
+                  val raw: ChatMessage,
+                  val outputTemplate: Option[TemplateRef]) {
 
   import APIImplicits._;
 
   private lazy val utils: APIUtils = ContextAPIUtils(this);
 
   def selected: List[Graphic] = {
-    val objs = if (raw.selected.isEmpty) { List.empty } else { raw.selected.get.toList };
+    val objs = if (raw.selected.isEmpty) {
+      List.empty
+    } else {
+      raw.selected.get.toList
+    };
     objs.flatMap(sel => Graphic.get(sel._id))
   }
   def target: Option[PlayerInfo] = {
@@ -177,19 +180,10 @@ class ChatContext(
 }
 
 object ChatContext {
-  def fromMsg(msg: ChatMessage): ChatContext = new ChatContext(
-    PlayerInfo(msg.playerid, msg.who),
-    ChatType.withName(msg.`type`),
-    msg,
-    None);
-  def fromMsg(msg: ChatMessage, outputTemplate: TemplateRef): ChatContext = new ChatContext(
-    PlayerInfo(msg.playerid, msg.who),
-    ChatType.withName(msg.`type`),
-    msg,
-    Some(outputTemplate));
-  def fromMsg(msg: ChatMessage, outputTemplate: Option[TemplateRef]): ChatContext = new ChatContext(
-    PlayerInfo(msg.playerid, msg.who),
-    ChatType.withName(msg.`type`),
-    msg,
-    outputTemplate);
+  def fromMsg(msg: ChatMessage): ChatContext =
+    new ChatContext(PlayerInfo(msg.playerid, msg.who), ChatType.withName(msg.`type`), msg, None);
+  def fromMsg(msg: ChatMessage, outputTemplate: TemplateRef): ChatContext =
+    new ChatContext(PlayerInfo(msg.playerid, msg.who), ChatType.withName(msg.`type`), msg, Some(outputTemplate));
+  def fromMsg(msg: ChatMessage, outputTemplate: Option[TemplateRef]): ChatContext =
+    new ChatContext(PlayerInfo(msg.playerid, msg.who), ChatType.withName(msg.`type`), msg, outputTemplate);
 }

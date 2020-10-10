@@ -27,13 +27,12 @@ package com.lkroll.roll20.api
 import scalajs.js
 import js.annotation._
 import com.lkroll.roll20.api.facade.Roll20API
-import Roll20API.{ Roll20Object, ChatMessage }
+import Roll20API.{ChatMessage, Roll20Object}
 import com.lkroll.roll20.util.ListMultiMap
-import scala.scalajs.js.Dynamic.{ global => dynGlobal, literal => dynLiteral }
-import scala.concurrent.{ Future, Promise, ExecutionContext }
+import scala.scalajs.js.Dynamic.{global => dynGlobal, literal => dynLiteral}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import collection.mutable
 
-@JSExportDescendentObjects
 trait APIScriptRoot extends APIScript {
   def children: Seq[APIScript] = Seq.empty;
   def readyChildren: Seq[APIScript] = Seq.empty;
@@ -63,9 +62,10 @@ trait APIScriptRoot extends APIScript {
 trait APIScript extends APILogging with APIUtils {
   import js.JSConverters._
 
-  implicit val ec: ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.runNow;
+  implicit val ec: ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.queue;
 
-  val subscriptions = new mutable.HashMap[String, mutable.MutableList[js.Function]] with ListMultiMap[String, js.Function];
+  val subscriptions = new mutable.HashMap[String, mutable.MutableList[js.Function]]
+  with ListMultiMap[String, js.Function];
   val commands = new mutable.HashMap[String, Function2[Array[String], ChatContext, Unit]];
   private var commandsSubscribed: Boolean = false;
   private val commandsSubscription: Function1[ChatMessage, Unit] = (msg) => {
@@ -77,7 +77,8 @@ trait APIScript extends APILogging with APIUtils {
       val cmd = args(0).substring(1);
       commands.get(cmd) match {
         case Some(handler) => handler(args, chatctx);
-        case None          => debug(s"${this.getClass.getSimpleName}: No handler found for command ${cmd} in ${args.mkString(" ")}")
+        case None =>
+          debug(s"${this.getClass.getSimpleName}: No handler found for command ${cmd} in ${args.mkString(" ")}")
       }
     }
   }

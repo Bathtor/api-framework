@@ -25,7 +25,7 @@
 package com.lkroll.roll20.api
 
 import com.lkroll.roll20.api.facade.Roll20API
-import com.lkroll.roll20.core.{ Renderable, APIButton }
+import com.lkroll.roll20.core.{APIButton, Renderable}
 import concurrent.ExecutionContext
 
 class APIOptionsException(message: String, val replyWith: Option[String] = None) extends Exception(message) {
@@ -50,16 +50,19 @@ class APIOptionsException(message: String, val replyWith: Option[String] = None)
 }
 
 object APIOptionsException {
-  def apply(message: String, replyWith: String): APIOptionsException = new APIOptionsException(message, Some(replyWith));
-  def apply(message: String, replyWith: String, cause: Throwable): APIOptionsException = new APIOptionsException(message, replyWith, cause);
+  def apply(message: String, replyWith: String): APIOptionsException =
+    new APIOptionsException(message, Some(replyWith));
+  def apply(message: String, replyWith: String, cause: Throwable): APIOptionsException =
+    new APIOptionsException(message, replyWith, cause);
 
-  def unapply(e: APIOptionsException): Option[(String, Option[String], Throwable)] = Some((e.getMessage, e.replyWith, e.getCause))
+  def unapply(e: APIOptionsException): Option[(String, Option[String], Throwable)] =
+    Some((e.getMessage, e.replyWith, e.getCause))
 }
 
 trait APICommand[C] extends APILogging with APIUtils {
   import scalatags.Text.all._;
 
-  implicit val ec: ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.runNow;
+  implicit val ec: ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.queue;
 
   def command: String;
   def options: Function[Array[String], C];

@@ -24,7 +24,7 @@
  */
 package com.lkroll.roll20.api.templates
 
-import com.lkroll.roll20.sheet.model.{ APIOutputTemplate, TemplateField }
+import com.lkroll.roll20.sheet.model.{APIOutputTemplate, TemplateField}
 
 object ModelExtraImplicits {
   type ModelOutputTemplate = APIOutputTemplate;
