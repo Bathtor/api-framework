@@ -34,13 +34,31 @@ import util.{Failure, Success, Try}
 object Campaign {
   def apply(): Campaign = new Campaign(Roll20API.Campaign());
 
+  /**
+    * The default colour token markers.
+    *
+    * These aren't returned by `Campaign.tokenMarkers`.
+    *
+    * The values are: "red", "blue", "green", "brown", "purple", "pink", "yellow".
+    */
+  val colourMarkers: List[TokenMarker] = List(
+    TokenMarker(id = -1, name = "Red", tag = "red", url = ""),
+    TokenMarker(id = -1, name = "Blue", tag = "blue", url = ""),
+    TokenMarker(id = -1, name = "Green", tag = "green", url = ""),
+    TokenMarker(id = -1, name = "Brown", tag = "brown", url = ""),
+    TokenMarker(id = -1, name = "Purple", tag = "purple", url = ""),
+    TokenMarker(id = -1, name = "Pink", tag = "pink", url = ""),
+    TokenMarker(id = -1, name = "Yellow", tag = "yellow", url = "")
+  );
+
   object Properties {
     val turnorder = "turnorder";
-    val initiativepage = "initiativepage	";
+    val initiativepage = "initiativepage";
     val playerpageid = "playerpageid";
     val playerspecificpages = "playerspecificpages";
     val journalfolder = "_journalfolder";
     val jukeboxfolder = "_jukeboxfolder";
+    val tokenmarkers = "token_markers";
   }
 }
 
@@ -98,7 +116,32 @@ class Campaign(val raw: Roll20API.Roll20Object) extends Roll20Managed {
   // TODO
   // _journalfolder	A JSON string which contains data about the folder structure of the game. Read-only.
   // _jukeboxfolder		A JSON string which contains data about the jukebox playlist structure of the game. Read-only.
+
+  /**
+    * List of all token markers in the campaign.
+    *
+    * Read-only.
+    *
+    * @return A list of all token markers in the campaign.
+    */
+  def tokenMarkers: List[TokenMarker] = {
+    try {
+      val stringifiedArray = raw.get(Properties.tokenmarkers).asInstanceOf[String];
+      val parsed = js.JSON.parse(stringifiedArray).asInstanceOf[js.Array[js.Dynamic]];
+      parsed.toList.map(
+        entry =>
+          TokenMarker(entry.id.asInstanceOf[Int],
+                      entry.name.asInstanceOf[String],
+                      entry.tag.asInstanceOf[String],
+                      entry.url.asInstanceOf[String])
+      )
+    } catch {
+      case e: Throwable => Nil
+    }
+  }
 }
+
+case class TokenMarker(id: Int, name: String, tag: String, url: String)
 
 object TurnOrder {
   sealed trait Entry {
