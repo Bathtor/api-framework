@@ -34,7 +34,7 @@ abstract class ScallopAPIConf(args: Seq[String] = Nil) extends ScallopConfBase(a
   import org.rogach.scallop.exceptions._;
 
   override protected def optionNameGuessingSupported: Boolean = false;
-  override protected def performOptionNameGuessing() {}
+  override protected def performOptionNameGuessing(): Unit = {}
 
   def helpString(): String = helpString(builder);
 
@@ -62,17 +62,20 @@ abstract class ScallopAPIConf(args: Seq[String] = Nil) extends ScallopConfBase(a
     sb.toString()
   }
 
-  override def onError(e: Throwable): Unit = e match {
-    case Help("") => throw APIOptionsException("User asked for command help.", helpString());
-    case Help(subname) =>
-      throw APIOptionsException("User asked for subcommand help.", helpString(builder.findSubbuilder(subname).get));
-    case Version                   => throw APIOptionsException("User asked for version.", builder.vers.mkString);
-    case ScallopException(message) => throw APIOptionsException("Parsing error: " + message, message);
-    case other =>
-      throw APIOptionsException("An error occurred during argument parsing.",
-                                "An error occurred during command parsing. Consult the API logs for more information.",
-                                other);
-  }
+  override def onError(e: Throwable): Unit =
+    e match {
+      case Help("") => throw APIOptionsException("User asked for command help.", helpString());
+      case Help(subname) =>
+        throw APIOptionsException("User asked for subcommand help.", helpString(builder.findSubbuilder(subname).get));
+      case Version                   => throw APIOptionsException("User asked for version.", builder.vers.mkString);
+      case ScallopException(message) => throw APIOptionsException("Parsing error: " + message, message);
+      case other =>
+        throw APIOptionsException(
+          "An error occurred during argument parsing.",
+          "An error occurred during command parsing. Consult the API logs for more information.",
+          other
+        );
+    }
 
   errorMessageHandler = { message =>
     Roll20API.log(Util.format("[%s] Error: %s", printedName, message))

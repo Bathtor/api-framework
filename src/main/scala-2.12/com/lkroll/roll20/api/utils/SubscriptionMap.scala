@@ -22,27 +22,13 @@
  * SOFTWARE.
  *
  */
-package com.lkroll.roll20.api.templates
+package com.lkroll.roll20.api.utils
 
-//import org.scalatest._;
-import org.scalatest.funsuite._
-import org.scalatest.matchers.should.Matchers
-import com.lkroll.roll20.core._
-import fastparse.Parsed
+import scalajs.js
+import com.lkroll.roll20.util.ListMultiMap
+import collection.mutable
 
-class ArithmeticParsingTests extends AnyFunSuite with Matchers {
-  //import CoreImplicits._
-
-  test("Int literals should parse") {
-    val testString = "10";
-    val res = ArithmeticParsers.parseInt(testString);
-    matchOrDebug(res, Arith.Literal(10));
-  }
-
-  private def matchOrDebug[T](res: Parsed[T], expected: T): Unit = {
-    res match {
-      case Parsed.Success(r, _) => r should be(expected)
-      case f: Parsed.Failure    => fail(f.extra.trace().msg)
-    }
-  }
+object SubscriptionMap {
+	def create: mutable.HashMap[String, mutable.MutableList[js.Function]] with ListMultiMap[String, js.Function] = 
+		new mutable.HashMap[String, mutable.MutableList[js.Function]] with ListMultiMap[String, js.Function];
 }

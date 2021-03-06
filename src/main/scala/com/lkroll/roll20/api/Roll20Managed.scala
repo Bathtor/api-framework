@@ -45,7 +45,6 @@ trait Roll20Managed {
     * Removed the object from Roll20.
     *
     * Using the object afterwards is unspecified behaviour!
-    *
     */
   def remove(): Unit = raw.remove();
 

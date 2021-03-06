@@ -24,10 +24,7 @@
  */
 package com.lkroll.roll20.api
 
-import scalajs.js
-import com.lkroll.roll20.api.facade.Roll20API._
-import com.lkroll.roll20.api.facade.Roll20Objects._
-import com.lkroll.roll20.core.{FieldLike, StringSerialiser}
+import com.lkroll.roll20.core.FieldLike
 
 trait AttributeContext {
 
@@ -85,7 +82,7 @@ class AttributeCache(private var attributes: List[Attribute], val character: Cha
       attr.current = field.initialValue;
       attributes ::= attr;
       Some(attr.typed(field))
-    } get;
+    }.get;
 
   override def getAttribute[T](field: FieldLike[T]): Option[FieldAttribute[T]] = {
     val res = attributes.find(a => a.name.equals(field.qualifiedAttr));

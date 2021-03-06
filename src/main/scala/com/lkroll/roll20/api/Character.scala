@@ -27,7 +27,7 @@ package com.lkroll.roll20.api
 import scalajs.js
 import com.lkroll.roll20.api.facade.Roll20API._
 import com.lkroll.roll20.api.facade.Roll20Objects._
-import com.lkroll.roll20.core.{FieldLike, StringSerialiser}
+import com.lkroll.roll20.core.FieldLike
 import java.net.URL
 
 object Character {
@@ -150,7 +150,7 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
       val attr = Attribute.create(this.id, field.qualifiedAttr);
       attr.current = field.initialValue;
       Some(attr.typed(field))
-    } get;
+    }.get;
   override def getAttribute[T](field: FieldLike[T]): Option[FieldAttribute[T]] = Attribute.findSingle(field, this.id);
   //override def attributes[T](field: FieldLike[T]): List[FieldAttribute[T]] = Attribute.findAll(field, this.id);
   override def repeating[T](field: FieldLike[T]): List[FieldAttribute[T]] = Attribute.findRepeating(field, this.id);

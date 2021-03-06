@@ -24,27 +24,26 @@
  */
 package com.lkroll.roll20.api
 
-import com.lkroll.roll20.api.facade.Roll20API
 import com.lkroll.roll20.core.{APIButton, Renderable}
 import concurrent.ExecutionContext
 
 class APIOptionsException(message: String, val replyWith: Option[String] = None) extends Exception(message) {
 
-  def this(message: String, cause: Throwable) {
+  def this(message: String, cause: Throwable) = {
     this(message);
     initCause(cause);
   }
 
-  def this(message: String, replyWith: String, cause: Throwable) {
+  def this(message: String, replyWith: String, cause: Throwable) = {
     this(message, Some(replyWith));
     initCause(cause);
   }
 
-  def this(cause: Throwable) {
+  def this(cause: Throwable) = {
     this(Option(cause).map(_.toString).orNull, cause);
   }
 
-  def this() {
+  def this() = {
     this(null: String)
   }
 }
@@ -67,23 +66,24 @@ trait APICommand[C] extends APILogging with APIUtils {
   def command: String;
   def options: Function[Array[String], C];
   def apply(config: C, ctx: ChatContext): Unit;
-  def callback: Function2[Array[String], ChatContext, Unit] = (args, ctx) => {
-    try {
-      val opts = options(args.drop(1));
-      apply(opts, ctx);
-    } catch {
-      case sapie: APIOptionsException => {
-        error(sapie);
+  def callback: Function2[Array[String], ChatContext, Unit] =
+    (args, ctx) => {
+      try {
+        val opts = options(args.drop(1));
+        apply(opts, ctx);
+      } catch {
+        case sapie: APIOptionsException => {
+          error(sapie);
 
-        val tO: Option[Tag] = sapie.replyWith.map(s => p(raw(s)));
-        if (sapie.getMessage.contains("help")) {
-          tO.foreach(ctx.reply(s"API Help for ${command}", _));
-        } else {
-          tO.foreach(ctx.replyError(_));
+          val tO: Option[Tag] = sapie.replyWith.map(s => p(raw(s)));
+          if (sapie.getMessage.contains("help")) {
+            tO.foreach(ctx.reply(s"API Help for ${command}", _));
+          } else {
+            tO.foreach(ctx.replyError(_));
+          }
         }
       }
     }
-  }
 
   def invoke(label: String, args: List[OptionApplication] = Nil): APIButton = {
     import APIImplicits._;

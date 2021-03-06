@@ -22,27 +22,34 @@
  * SOFTWARE.
  *
  */
-package com.lkroll.roll20.api.templates
+package com.lkroll.roll20.api.utils
 
-//import org.scalatest._;
-import org.scalatest.funsuite._
-import org.scalatest.matchers.should.Matchers
-import com.lkroll.roll20.core._
-import fastparse.Parsed
+import scalajs.js
+import com.lkroll.roll20.util.ListMultiMap
+import collection.mutable
 
-class ArithmeticParsingTests extends AnyFunSuite with Matchers {
-  //import CoreImplicits._
+object SubscriptionMap {
+  def create: SubscriptionMap = new SubscriptionMap();
+}
 
-  test("Int literals should parse") {
-    val testString = "10";
-    val res = ArithmeticParsers.parseInt(testString);
-    matchOrDebug(res, Arith.Literal(10));
+class SubscriptionMap extends ListMultiMap[String, js.Function] {
+
+  private val underlying = new mutable.HashMap[String, mutable.ArrayDeque[js.Function]];
+
+  override def addOne(
+      elem: (String, mutable.ArrayDeque[js.Function])
+  ): SubscriptionMap.this.type = {
+    underlying.addOne(elem);
+    this
+  };
+
+  def iterator: Iterator[(String, mutable.ArrayDeque[js.Function])] = underlying.iterator;
+
+  def get(key: String): Option[mutable.ArrayDeque[js.Function]] = underlying.get(key);
+
+  def subtractOne(elem: String): SubscriptionMap.this.type = {
+    underlying.subtractOne(elem);
+    this
   }
 
-  private def matchOrDebug[T](res: Parsed[T], expected: T): Unit = {
-    res match {
-      case Parsed.Success(r, _) => r should be(expected)
-      case f: Parsed.Failure    => fail(f.extra.trace().msg)
-    }
-  }
 }

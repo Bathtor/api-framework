@@ -60,11 +60,12 @@ object TemplateVal {
 }
 
 case class TemplateVar(key: String, value: TemplateVal) extends Renderable {
-  override def render: String = value match {
-    case TemplateVal.Empty             => "" // unset var
-    case TemplateVal.BooleanVal(false) => "" // unset var
-    case _                             => s"""{{$key=${value.render}}}"""
-  }
+  override def render: String =
+    value match {
+      case TemplateVal.Empty             => "" // unset var
+      case TemplateVal.BooleanVal(false) => "" // unset var
+      case _                             => s"""{{$key=${value.render}}}"""
+    }
 }
 
 object TemplateVar {
@@ -103,7 +104,8 @@ case class TemplateVars(vars: List[TemplateVar]) extends Renderable {
     replaceInlineRollRefs(rolls, trans2)
   }
   def replaceInlineRollRefs(rolls: List[InlineRoll],
-                            transformer: (InlineRoll, TemplateVar) => TemplateVal): TemplateVars = {
+                            transformer: (InlineRoll, TemplateVar) => TemplateVal
+  ): TemplateVars = {
     val res = vars.map { tvar =>
       val newval = tvar.value match {
         case TemplateVal.InlineRollRef(index) => {
@@ -116,14 +118,7 @@ case class TemplateVars(vars: List[TemplateVar]) extends Renderable {
     };
     TemplateVars(res)
   }
-  def lookup(key: String): Option[TemplateVar] = {
-    vars.foreach { tvar =>
-      if (tvar.key == key) {
-        return Some(tvar);
-      }
-    }
-    return None;
-  }
+  def lookup(key: String): Option[TemplateVar] = vars.find(_.key == key);
   def ::(tvar: TemplateVar): TemplateVars = TemplateVars(tvar :: vars);
 }
 
@@ -140,7 +135,7 @@ object TemplateVars extends org.rogach.scallop.ValueConverter[TemplateVars] {
         val s = l.mkString(" "); // reassemble the arg list the way it was before splitting
         fastparse.parse(s, parser(_)) match {
           case Parsed.Success(r, _) => Right(Some(r))
-          case f: Parsed.Failure    => System.err.println(f.extra.traced.trace); Left(f.toString())
+          case f: Parsed.Failure    => System.err.println(f.extra.trace().msg); Left(f.toString())
         }
       }
       case Nil => Right(None) // no vars found

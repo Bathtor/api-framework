@@ -28,9 +28,9 @@ import scalajs.js
 import js.annotation._
 import com.lkroll.roll20.api.facade.Roll20API
 import Roll20API.{ChatMessage, Roll20Object}
-import com.lkroll.roll20.util.ListMultiMap
-import scala.scalajs.js.Dynamic.{global => dynGlobal, literal => dynLiteral}
-import scala.concurrent.{ExecutionContext, Future, Promise}
+// import scala.scalajs.js.Dynamic.{global => dynGlobal, literal => dynLiteral}
+// import scala.concurrent.{ExecutionContext, Future, Promise}
+import concurrent.ExecutionContext
 import collection.mutable
 
 trait APIScriptRoot extends APIScript {
@@ -38,18 +38,17 @@ trait APIScriptRoot extends APIScript {
   def readyChildren: Seq[APIScript] = Seq.empty;
 
   @JSExport
-  def load() {
+  def load(): Unit = {
     val allChildren = (children ++ readyChildren);
-    subscriptions.foreach { t: (String, Seq[js.Function]) =>
-      {
-        val (k, callbacks) = t;
+    subscriptions.foreach {
+      case (k, callbacks) => {
         callbacks.foreach { c =>
           debug(s"${this.getClass.getName}: subscribing callback on trigger: ${k}.");
           Roll20API.on(k, c)
         }
       }
     }
-    children.foreach(_.internal_load());
+    allChildren.foreach(_.internal_load());
   }
 
   onReady {
@@ -60,12 +59,10 @@ trait APIScriptRoot extends APIScript {
 }
 
 trait APIScript extends APILogging with APIUtils {
-  import js.JSConverters._
 
-  implicit val ec: ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.queue;
+  implicit val ec: ExecutionContext = scalajs.concurrent.JSExecutionContext.queue;
 
-  val subscriptions = new mutable.HashMap[String, mutable.MutableList[js.Function]]
-  with ListMultiMap[String, js.Function];
+  val subscriptions = utils.SubscriptionMap.create;
   val commands = new mutable.HashMap[String, Function2[Array[String], ChatContext, Unit]];
   private var commandsSubscribed: Boolean = false;
   private val commandsSubscription: Function1[ChatMessage, Unit] = (msg) => {
@@ -86,14 +83,13 @@ trait APIScript extends APILogging with APIUtils {
   private[api] var ready: Boolean = false;
   def isReady: Boolean = this.ready;
 
-  private[api] def internal_load() {
+  private[api] def internal_load(): Unit = {
     apiCommands.foreach { c =>
       debug(s"${this.getClass.getName}: registering command ${c.command}");
       onCommand(c.command)(c.callback);
     }
-    subscriptions.foreach { t: (String, Seq[js.Function]) =>
-      {
-        val (k, callbacks) = t;
+    subscriptions.foreach {
+      case (k, callbacks) => {
         callbacks.foreach { c =>
           debug(s"${this.getClass.getName}: subscribing callback on trigger: ${k}.");
           Roll20API.on(k, c)
@@ -103,7 +99,7 @@ trait APIScript extends APILogging with APIUtils {
   }
 
   def onReady(callback: => Unit): Unit = {
-    subscriptions.addBinding("ready", (callback _));
+    subscriptions.addBinding("ready", () => callback);
   }
 
   def onChange(trigger: String, callback: Function2[Roll20Object, Roll20Object, Unit]): Unit = {

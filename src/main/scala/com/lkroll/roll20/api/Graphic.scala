@@ -26,9 +26,7 @@
 package com.lkroll.roll20.api
 
 import scalajs.js
-import scalajs.js.JSConverters._
 import com.lkroll.roll20.api.facade.Roll20API._
-import com.lkroll.roll20.api.facade.Roll20Objects._
 import java.net.URL
 
 object Graphic {
@@ -46,7 +44,8 @@ object Graphic {
     rawO.map { raw =>
       raw.get(Properties.subtype).asInstanceOf[String] match {
         case Subtypes.token => new Token(raw)
-        case Subtypes.card  => new Card(raw);
+        case Subtypes.card  => new Card(raw)
+        case x              => throw new RuntimeException(s"Illegal Graphic type: $x")
       }
     }
   }

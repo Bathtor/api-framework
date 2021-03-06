@@ -45,7 +45,8 @@ object Attribute {
 
   def createRepeating[T](characterId: String,
                          field: FieldLike[T],
-                         providedRowId: Option[String] = None): FieldAttribute[T] = {
+                         providedRowId: Option[String] = None
+  ): FieldAttribute[T] = {
     val rowId = providedRowId match {
       case Some(s) => s
       case None    => APIUtils.generateRowId()
@@ -63,7 +64,8 @@ object Attribute {
   private def findRaw(name: String, characterId: String): List[Roll20Object] = {
     val query = js.Dynamic.literal("type" -> Roll20ObjectTypes.attribute,
                                    Properties.name -> name,
-                                   Properties.characterid -> characterId);
+                                   Properties.characterid -> characterId
+    );
     val res = findObjs(query);
     res.toList
   }
@@ -145,10 +147,11 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
   /**
     * Try to extract the rowId from the name, if this is an attribute in a repeating section.
     */
-  def getRowId: Option[String] = name match {
-    case rowIdPattern(rowId) => Some(rowId)
-    case _                   => None
-  }
+  def getRowId: Option[String] =
+    name match {
+      case rowIdPattern(rowId) => Some(rowId)
+      case _                   => None
+    }
 
   /**
     * The current value of the attribute can be accessed in chat and macros with the syntax
@@ -157,7 +160,7 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
   def current: String = raw.get(Properties.current).toString;
   def current_=(s: String): Unit = raw.set(Properties.current, s);
   def currentWithWorker(s: String): Future[Unit] = {
-    val p = Promise[Unit];
+    val p = Promise[Unit]();
     onSheetWorkerCompleted(() => p.success(()));
     raw.setWithWorker(js.Dynamic.literal(Properties.current -> s));
     p.future
@@ -170,7 +173,7 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
   def max: String = raw.get(Properties.max).toString;
   def max_=(s: String): Unit = raw.set(Properties.max, s);
   def maxWithWorker(s: String): Future[Unit] = {
-    val p = Promise[Unit];
+    val p = Promise[Unit]();
     onSheetWorkerCompleted(() => p.success(()));
     raw.setWithWorker(js.Dynamic.literal(Properties.max -> s));
     p.future

@@ -24,7 +24,7 @@
  */
 package com.lkroll.roll20.api
 
-import com.lkroll.roll20.core.{ChatCommand, ChatOutMessage, CoreImplicits, PrimitiveStringSerialisers, Renderable}
+import com.lkroll.roll20.core.{ChatCommand, ChatOutMessage, CoreImplicits, PrimitiveStringSerialisers}
 import org.rogach.scallop._
 import com.lkroll.roll20.api.conf._
 import scalatags.Text.all._

@@ -92,7 +92,6 @@ trait APIUtils {
   }
 
   def sendChat(speakingAs: PlayerInfo, input: APIChatOutMessage): Unit = {
-    val sas = s"player|${speakingAs.id}";
     sendChat(speakingAs, None, input)
   }
   def sendChat(speakingAs: PlayerInfo, title: String, input: APIChatOutMessage): Unit = {
@@ -137,7 +136,8 @@ trait APIUtils {
                             showHeader: Boolean = true,
                             showFooter: Boolean = true,
                             isWarning: Boolean = false,
-                            isError: Boolean = false): ChatOutMessage = {
+                            isError: Boolean = false
+  ): ChatOutMessage = {
     import APIChatOutMessage._;
 
     val res = input match {
@@ -154,10 +154,11 @@ trait APIUtils {
   private def msgStringToTemplate(titleText: String,
                                   contentText: String,
                                   cmd: ChatCommand,
-                                  showHeader: Boolean = true,
-                                  showFooter: Boolean = true,
-                                  isWarning: Boolean = false,
-                                  isError: Boolean = false): ChatOutMessage = {
+                                  showHeader: Boolean, // = true,
+                                  showFooter: Boolean, // = true,
+                                  isWarning: Boolean, // = false,
+                                  isError: Boolean // = false
+  ): ChatOutMessage = {
     import scalatags.Text.all._;
     import com.lkroll.roll20.api.templates._;
     import TemplateImplicits._;
@@ -238,6 +239,7 @@ class RowIdPool {
     * This method guarantees that no duplicates will be generated, at the cost of potentially hot-blocking
     * the execution if fresh ids are requested more rapidly than can be accommodated.
     */
+  @annotation.nowarn("msg=match may not be exhaustive")
   def generateRowId(): String = {
     while (true) {
       val id = Roll20Extras.generateRowID();

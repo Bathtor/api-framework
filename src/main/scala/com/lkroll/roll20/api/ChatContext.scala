@@ -25,8 +25,7 @@
 package com.lkroll.roll20.api
 
 import com.lkroll.roll20.api.facade.Roll20API.{InlineRollResults => FacadeIRR, InlineRoll => FacadeIR, _}
-import com.lkroll.roll20.core._
-import scalajs.js
+import com.lkroll.roll20.core.{TemplateApplication => _, _}
 import scalajs.js.JSON
 import scalatags.Text.all._
 
@@ -50,7 +49,8 @@ object InlineRoll {
 class ChatContext(val player: PlayerInfo,
                   val `type`: ChatType.ChatType,
                   val raw: ChatMessage,
-                  val outputTemplate: Option[TemplateRef]) {
+                  val outputTemplate: Option[TemplateRef]
+) {
 
   import APIImplicits._;
 
@@ -169,10 +169,11 @@ class ChatContext(val player: PlayerInfo,
     sb.result()
   }
 
-  private def opt2String[T](ot: Option[T]): String = ot match {
-    case Some(t) => t.toString()
-    case None    => "None"
-  }
+  private def opt2String[T](ot: Option[T]): String =
+    ot match {
+      case Some(t) => t.toString()
+      case None    => "None"
+    }
 
   override def toString(): String = {
     s"ChatContext($player, type=${`type`}) from ${JSON.stringify(raw)}"

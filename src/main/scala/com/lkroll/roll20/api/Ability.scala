@@ -44,7 +44,8 @@ object Ability {
   def find(name: String, characterId: String): List[Ability] = {
     val query = js.Dynamic.literal("type" -> Roll20ObjectTypes.ability,
                                    Properties.name -> name,
-                                   Properties.characterid -> characterId);
+                                   Properties.characterid -> characterId
+    );
     val res = findObjs(query);
     res.map(o => new Ability(o)).toList
   }

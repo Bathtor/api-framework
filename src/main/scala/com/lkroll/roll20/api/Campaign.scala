@@ -27,7 +27,6 @@ package com.lkroll.roll20.api
 import scalajs.js
 import scalajs.js.JSON
 import com.lkroll.roll20.api.facade.Roll20API
-import com.lkroll.roll20.core._
 import collection.mutable
 import util.{Failure, Success, Try}
 
@@ -128,12 +127,12 @@ class Campaign(val raw: Roll20API.Roll20Object) extends Roll20Managed {
     try {
       val stringifiedArray = raw.get(Properties.tokenmarkers).asInstanceOf[String];
       val parsed = js.JSON.parse(stringifiedArray).asInstanceOf[js.Array[js.Dynamic]];
-      parsed.toList.map(
-        entry =>
-          TokenMarker(entry.id.asInstanceOf[Int],
-                      entry.name.asInstanceOf[String],
-                      entry.tag.asInstanceOf[String],
-                      entry.url.asInstanceOf[String])
+      parsed.toList.map(entry =>
+        TokenMarker(entry.id.asInstanceOf[Int],
+                    entry.name.asInstanceOf[String],
+                    entry.tag.asInstanceOf[String],
+                    entry.url.asInstanceOf[String]
+        )
       )
     } catch {
       case e: Throwable => Nil
@@ -147,10 +146,11 @@ object TurnOrder {
   sealed trait Entry {
     def id: String;
     def pr: Either[Int, String];
-    def prString: String = pr match {
-      case Left(i)  => i.toString
-      case Right(s) => s
-    };
+    def prString: String =
+      pr match {
+        case Left(i)  => i.toString
+        case Right(s) => s
+      };
     def custom: String;
     def write(): String = s"""{"id" : "$id", "pr" : "$prString", "custom" : "$custom"}""";
   }
