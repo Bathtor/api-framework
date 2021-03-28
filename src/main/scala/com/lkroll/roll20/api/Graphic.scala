@@ -27,7 +27,6 @@ package com.lkroll.roll20.api
 
 import scalajs.js
 import com.lkroll.roll20.api.facade.Roll20API._
-import com.lkroll.roll20.api.facade.Roll20Objects._
 import java.net.URL
 
 object Graphic {
@@ -45,7 +44,8 @@ object Graphic {
     rawO.map { raw =>
       raw.get(Properties.subtype).asInstanceOf[String] match {
         case Subtypes.token => new Token(raw)
-        case Subtypes.card  => new Card(raw);
+        case Subtypes.card  => new Card(raw)
+        case x              => throw new RuntimeException(s"Illegal Graphic type: $x")
       }
     }
   }
@@ -118,19 +118,20 @@ sealed abstract class Graphic protected (val raw: Roll20Object) extends Roll20Ma
   import Graphic._;
 
   /**
-   * May be "token" (for tokens and maps) or "card" (for cards). Read-only.
-   */
+    * May be "token" (for tokens and maps) or "card" (for cards). Read-only.
+    */
   def subtype: String = raw.get(Properties.subtype).asInstanceOf[String];
 
   /**
-   * ID of the page the object is in. Read-only.
-   */
+    * ID of the page the object is in. Read-only.
+    */
   def pageId: String = raw.get(Properties.pageid).asInstanceOf[String];
+
   /**
-   * The URL of the graphic's image.
-   * See the note about avatar and imgsrc restrictions
-   * at [[https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions Roll20 Docs]].
-   */
+    * The URL of the graphic's image.
+    * See the note about avatar and imgsrc restrictions
+    * at [[https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions Roll20 Docs]].
+    */
   def imgSrc: URL = {
     val urlS = raw.get(Properties.imgsrc).asInstanceOf[String];
     new URL(urlS)
@@ -143,6 +144,34 @@ sealed abstract class Graphic protected (val raw: Roll20Object) extends Roll20Ma
   def name: String = raw.get(Properties.name).asInstanceOf[String];
   def name_=(s: String): Unit = raw.set(Properties.name, s);
 
+  /**
+    * List currently active status markers.
+    *
+    * @return A list of currently active status markers.
+    */
+  def statusMarkers: List[String] = {
+    val stringified = raw.get(Properties.statusmarkers).asInstanceOf[String];
+    val parsed = stringified.split(",");
+    if (parsed.head.isEmpty()) {
+      Nil
+    } else {
+      parsed.toList
+    }
+  };
+  def statusMarkers_=(l: List[String]): Unit = {
+    val stringified = l.mkString(",");
+    raw.set(Properties.statusmarkers, stringified);
+  }
+
+  /**
+    * Same as `statusMarkers` but without the counts.
+    *
+    * @return A list of currently active status markers with counts removed.
+    */
+  def statusMarkersStripped: List[String] = {
+    statusMarkers.map(s => s.split("@").head)
+  }
+
   // TODO the rest oO
 }
 
@@ -150,8 +179,8 @@ class Card(_raw: Roll20Object) extends Graphic(_raw) {
   import Graphic._;
 
   /**
-   * Set to an ID if the graphic is a card. Read-only.
-   */
+    * Set to an ID if the graphic is a card. Read-only.
+    */
   def cardId: String = raw.get(Properties.cardid).asInstanceOf[String];
 
   // TODO the rest oO
@@ -163,13 +192,14 @@ class Token(_raw: Roll20Object) extends Graphic(_raw) {
   import Graphic._;
 
   /**
-   * ID of the character this token represents.
-   */
+    * ID of the character this token represents.
+    */
   def representsId: String = raw.get(Properties.represents).asInstanceOf[String];
   def representsId_=(s: String): Unit = raw.set(Properties.represents, s);
+
   /**
-   * The character this token represents.
-   */
+    * The character this token represents.
+    */
   def represents: Option[Character] = {
     val cid = representsId;
     if (cid.isEmpty()) {
@@ -181,6 +211,27 @@ class Token(_raw: Roll20Object) extends Graphic(_raw) {
   def represents_=(c: Character) = {
     representsId = c.id;
   }
+
+  def showName: Boolean = raw.get(Properties.showname).asInstanceOf[Boolean];
+  def showName_=(b: Boolean) = raw.set(Properties.showname, b);
+
+  private def barLinkAttr(property: String): Option[Attribute] =
+    represents.flatMap { char =>
+      val attrId = raw.get(property).asInstanceOf[String];
+      Attribute.get(attrId)
+    };
+
+  private def barLinkSetAttr(property: String, attr: Attribute): Unit = {
+    assert(representsId == attr.characterId);
+    raw.set(property, attr.raw.id);
+  }
+
+  def bar1Link: Option[Attribute] = barLinkAttr(Properties.bar1Link);
+  def bar1Link_=(attr: Attribute) = barLinkSetAttr(Properties.bar1Link, attr);
+  def bar2Link: Option[Attribute] = barLinkAttr(Properties.bar2Link);
+  def bar2Link_=(attr: Attribute) = barLinkSetAttr(Properties.bar2Link, attr);
+  def bar3Link: Option[Attribute] = barLinkAttr(Properties.bar2Link);
+  def bar3Link_=(attr: Attribute) = barLinkSetAttr(Properties.bar3Link, attr);
 
   // TODO the rest oO
 

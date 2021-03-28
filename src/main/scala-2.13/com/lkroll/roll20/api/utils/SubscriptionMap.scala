@@ -22,34 +22,34 @@
  * SOFTWARE.
  *
  */
-package com.lkroll.roll20.api.conf
+package com.lkroll.roll20.api.utils
 
-import org.rogach.scallop._
-import com.lkroll.roll20.api._
+import scalajs.js
+import com.lkroll.roll20.util.ListMultiMap
+import collection.mutable
 
-object DefaultOptionRenderers {
-  val str: String => String = identity;
-  def trivial[T]: T => String = (t: T) => t.toString();
+object SubscriptionMap {
+  def create: SubscriptionMap = new SubscriptionMap();
 }
 
-case class AppliedOption[T](opt: ScallopOption[T], value: T, renderer: T => String) extends OptionApplication {
-  override def render: String = s"--${opt.name} ${renderer(value)}";
-}
+class SubscriptionMap extends ListMultiMap[String, js.Function] {
 
-case class BooleanOption(opt: ScallopOption[Boolean], value: Boolean) extends OptionApplication {
-  override def render: String =
-    if (value) {
-      s"--${opt.name}";
-    } else {
-      ""
-    };
-}
+  private val underlying = new mutable.HashMap[String, mutable.ArrayDeque[js.Function]];
 
-case class ListOption[S](opt: ScallopOption[List[S]], value: S, renderer: S => String) extends OptionApplication {
-  override def render: String = s"--${opt.name} ${renderer(value)}";
-}
+  override def addOne(
+      elem: (String, mutable.ArrayDeque[js.Function])
+  ): SubscriptionMap.this.type = {
+    underlying.addOne(elem);
+    this
+  };
 
-case class OptionOption[T](opt: ScallopOption[Option[T]], value: Option[T], renderer: T => String)
-    extends OptionApplication {
-  override def render: String = s"--${opt.name} ${value.map(renderer).getOrElse("None")}";
+  def iterator: Iterator[(String, mutable.ArrayDeque[js.Function])] = underlying.iterator;
+
+  def get(key: String): Option[mutable.ArrayDeque[js.Function]] = underlying.get(key);
+
+  def subtractOne(elem: String): SubscriptionMap.this.type = {
+    underlying.subtractOne(elem);
+    this
+  }
+
 }

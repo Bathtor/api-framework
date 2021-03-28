@@ -24,17 +24,18 @@
  */
 package com.lkroll.roll20.api.templates
 
-import com.lkroll.roll20.core._
+import com.lkroll.roll20.core.{TemplateApplication => _, _}
 
 trait TemplateImplicits extends TemplateCoreImplicits {
   def templateV[T](t: (String, T))(implicit conv: T => TemplateVal): TemplateVar = {
     val v = conv(t._2);
     TemplateVar(t._1, v)
   }
-  implicit def ot2tv[T](tO: Option[T])(implicit conv: T => TemplateVal): TemplateVal = tO match {
-    case Some(t) => conv(t)
-    case None    => TemplateVal.Empty
-  }
+  implicit def ot2tv[T](tO: Option[T])(implicit conv: T => TemplateVal): TemplateVal =
+    tO match {
+      case Some(t) => conv(t)
+      case None    => TemplateVal.Empty
+    }
   implicit def unit2tv(u: Unit): TemplateVal = TemplateVal.Empty;
   implicit def str2tv(s: String): TemplateVal = TemplateVal.Raw(s);
   implicit def num2tv[N: Numeric](n: N): TemplateVal = TemplateVal.Number(n);

@@ -42,18 +42,16 @@ object Ability {
   }
 
   def find(name: String, characterId: String): List[Ability] = {
-    val query = js.Dynamic.literal(
-      "type" -> Roll20ObjectTypes.ability,
-      Properties.name -> name,
-      Properties.characterid -> characterId);
+    val query = js.Dynamic.literal("type" -> Roll20ObjectTypes.ability,
+                                   Properties.name -> name,
+                                   Properties.characterid -> characterId
+    );
     val res = findObjs(query);
     res.map(o => new Ability(o)).toList
   }
 
   def findAll(characterId: String): List[Ability] = {
-    val query = js.Dynamic.literal(
-      "type" -> Roll20ObjectTypes.ability,
-      Properties.characterid -> characterId);
+    val query = js.Dynamic.literal("type" -> Roll20ObjectTypes.ability, Properties.characterid -> characterId);
     val res = findObjs(query);
     res.map(o => new Ability(o)).toList
   }
@@ -71,25 +69,28 @@ class Ability private (val raw: Roll20Object) extends Roll20Managed {
   import Ability._;
 
   /**
-   * ID of the character this ability belongs to. Read-only.
-   */
+    * ID of the character this ability belongs to. Read-only.
+    */
   def characterId: String = raw.get(Properties.characterid).asInstanceOf[String];
   def character: Character = Character.get(characterId).get;
   def name: String = raw.get(Properties.name).asInstanceOf[String];
   def name_=(s: String): Unit = raw.set(Properties.name, s);
+
   /**
-   * The description does not appear in the character sheet interface.
-   */
+    * The description does not appear in the character sheet interface.
+    */
   def description: String = raw.get(Properties.description).asInstanceOf[String];
   def description_=(s: String): Unit = raw.set(Properties.description, s);
+
   /**
-   * The text of the ability.
-   */
+    * The text of the ability.
+    */
   def action: String = raw.get(Properties.action).asInstanceOf[String];
   def action_=(s: String): Unit = raw.set(Properties.action, s);
+
   /**
-   * Is this ability a token action that should show up when tokens linked to its parent Character are selected?
-   */
+    * Is this ability a token action that should show up when tokens linked to its parent Character are selected?
+    */
   def isTokenAction: Boolean = raw.get(Properties.istokenaction).asInstanceOf[Boolean];
   def isTokenAction_=(b: Boolean): Unit = raw.set(Properties.istokenaction, b);
 

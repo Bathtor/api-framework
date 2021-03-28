@@ -22,34 +22,13 @@
  * SOFTWARE.
  *
  */
-package com.lkroll.roll20.api.conf
+package com.lkroll.roll20.api.utils
 
-import org.rogach.scallop._
-import com.lkroll.roll20.api._
+import scalajs.js
+import com.lkroll.roll20.util.ListMultiMap
+import collection.mutable
 
-object DefaultOptionRenderers {
-  val str: String => String = identity;
-  def trivial[T]: T => String = (t: T) => t.toString();
-}
-
-case class AppliedOption[T](opt: ScallopOption[T], value: T, renderer: T => String) extends OptionApplication {
-  override def render: String = s"--${opt.name} ${renderer(value)}";
-}
-
-case class BooleanOption(opt: ScallopOption[Boolean], value: Boolean) extends OptionApplication {
-  override def render: String =
-    if (value) {
-      s"--${opt.name}";
-    } else {
-      ""
-    };
-}
-
-case class ListOption[S](opt: ScallopOption[List[S]], value: S, renderer: S => String) extends OptionApplication {
-  override def render: String = s"--${opt.name} ${renderer(value)}";
-}
-
-case class OptionOption[T](opt: ScallopOption[Option[T]], value: Option[T], renderer: T => String)
-    extends OptionApplication {
-  override def render: String = s"--${opt.name} ${value.map(renderer).getOrElse("None")}";
+object SubscriptionMap {
+	def create: mutable.HashMap[String, mutable.MutableList[js.Function]] with ListMultiMap[String, js.Function] = 
+		new mutable.HashMap[String, mutable.MutableList[js.Function]] with ListMultiMap[String, js.Function];
 }

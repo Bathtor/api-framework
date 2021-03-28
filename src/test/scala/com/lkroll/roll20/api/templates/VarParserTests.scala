@@ -24,72 +24,72 @@
  */
 package com.lkroll.roll20.api.templates
 
-import org.scalatest._;
+//import org.scalatest._
+import org.scalatest.funsuite._
+import org.scalatest.matchers.should.Matchers
 import com.lkroll.roll20.core._
 
-class VarParserTests extends FunSuite with Matchers {
+class VarParserTests extends AnyFunSuite with Matchers {
   import TemplateVal._
   import CoreImplicits._
 
   test("A single var should match") {
     val testString = "{{key=value}}";
     val vars = TemplateVars.parse(List(("", List(testString))));
-    vars should be (Right(Some(TemplateVars(List(TemplateVar("key", Raw("value")))))));
+    vars should be(Right(Some(TemplateVars(List(TemplateVar("key", Raw("value")))))));
   }
 
   test("Empty values should match") {
     val testString = "{{key=}}";
     val vars = TemplateVars.parse(List(("", List(testString))));
-    vars should be (Right(Some(TemplateVars(List(TemplateVar("key", Empty))))));
+    vars should be(Right(Some(TemplateVars(List(TemplateVar("key", Empty))))));
   }
 
   test("A single var with space should match") {
     val testString = "{{key=value 1}}";
     val vars = TemplateVars.parse(List(("", List(testString))));
-    vars should be (Right(Some(TemplateVars(List(TemplateVar("key", Raw("value 1")))))));
+    vars should be(Right(Some(TemplateVars(List(TemplateVar("key", Raw("value 1")))))));
   }
 
   test("A single var with roll-wrapped values should match") {
     val testString = "{{key=[[10]]}}";
     val vars = TemplateVars.parse(List(("", List(testString))));
-    vars should be (Right(Some(TemplateVars(List(TemplateVar("key", InlineRoll(Rolls.InlineRoll(10))))))));
+    vars should be(Right(Some(TemplateVars(List(TemplateVar("key", InlineRoll(Rolls.InlineRoll(10))))))));
   }
 
   test("A single var with roll-wrapped spaced values should match") {
     val testString = "{{key=[[ 10 ]]}}";
     val vars = TemplateVars.parse(List(("", List(testString))));
-    vars should be (Right(Some(TemplateVars(List(TemplateVar("key", InlineRoll(Rolls.InlineRoll(10))))))));
+    vars should be(Right(Some(TemplateVars(List(TemplateVar("key", InlineRoll(Rolls.InlineRoll(10))))))));
   }
 
   test("A single var with rollref values should match") {
     val testString = "{{key=$[[10]]}}";
     val vars = TemplateVars.parse(List(("", List(testString))));
-    vars should be (Right(Some(TemplateVars(List(TemplateVar("key", InlineRollRef(10)))))));
+    vars should be(Right(Some(TemplateVars(List(TemplateVar("key", InlineRollRef(10)))))));
   }
 
   test("A single var with translation label should match") {
     val testString = "{{key=^{label}}}";
     val vars = TemplateVars.parse(List(("", List(testString))));
-    vars should be (Right(Some(TemplateVars(List(TemplateVar("key", TranslationKey("label")))))));
+    vars should be(Right(Some(TemplateVars(List(TemplateVar("key", TranslationKey("label")))))));
   }
 
   test("Multiple vars should match") {
     val testString = "{{key1=value1}} {{key2=value2}} {{key3=value3}}";
     val vars = TemplateVars.parse(List(("", List(testString))));
-    val expected = TemplateVars(List(
-      TemplateVar("key1", Raw("value1")),
-      TemplateVar("key2", Raw("value2")),
-      TemplateVar("key3", Raw("value3"))))
-    vars should be (Right(Some(expected)));
+    val expected = TemplateVars(
+      List(TemplateVar("key1", Raw("value1")), TemplateVar("key2", Raw("value2")), TemplateVar("key3", Raw("value3")))
+    )
+    vars should be(Right(Some(expected)));
   }
 
   test("Multiple vars with extra stuff should match") {
     val testString = "/w gm {{key1=value1}} {{key2=value2}} {{key3=value3}} useless stuff";
     val vars = TemplateVars.parse(List(("", List(testString))));
-    val expected = TemplateVars(List(
-      TemplateVar("key1", Raw("value1")),
-      TemplateVar("key2", Raw("value2")),
-      TemplateVar("key3", Raw("value3"))))
-    vars should be (Right(Some(expected)));
+    val expected = TemplateVars(
+      List(TemplateVar("key1", Raw("value1")), TemplateVar("key2", Raw("value2")), TemplateVar("key3", Raw("value3")))
+    )
+    vars should be(Right(Some(expected)));
   }
 }

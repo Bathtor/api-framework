@@ -25,10 +25,10 @@
 package com.lkroll.roll20.api
 
 import scalajs.js
-import scala.concurrent.{ Future, Promise }
+import scala.concurrent.{Future, Promise}
 import com.lkroll.roll20.api.facade.Roll20API._
 import com.lkroll.roll20.api.facade.Roll20Objects._
-import com.lkroll.roll20.core.{ FieldLike, StringSerialiser }
+import com.lkroll.roll20.core.{FieldLike, StringSerialiser}
 
 object Attribute {
   def create(characterId: String, name: String): Attribute = {
@@ -43,7 +43,10 @@ object Attribute {
     attr.typed(field)
   }
 
-  def createRepeating[T](characterId: String, field: FieldLike[T], providedRowId: Option[String] = None): FieldAttribute[T] = {
+  def createRepeating[T](characterId: String,
+                         field: FieldLike[T],
+                         providedRowId: Option[String] = None
+  ): FieldAttribute[T] = {
     val rowId = providedRowId match {
       case Some(s) => s
       case None    => APIUtils.generateRowId()
@@ -59,10 +62,10 @@ object Attribute {
   }
 
   private def findRaw(name: String, characterId: String): List[Roll20Object] = {
-    val query = js.Dynamic.literal(
-      "type" -> Roll20ObjectTypes.attribute,
-      Properties.name -> name,
-      Properties.characterid -> characterId);
+    val query = js.Dynamic.literal("type" -> Roll20ObjectTypes.attribute,
+                                   Properties.name -> name,
+                                   Properties.characterid -> characterId
+    );
     val res = findObjs(query);
     res.toList
   }
@@ -70,6 +73,18 @@ object Attribute {
   def find(name: String, characterId: String): List[Attribute] = {
     val res = findRaw(name, characterId);
     res.map(o => new Attribute(o))
+  }
+
+  def findOrCreate(name: String, characterId: String): Attribute = {
+    val res = findRaw(name, characterId);
+    if (res.isEmpty) {
+      create(characterId, name)
+    } else if (res.size > 1) {
+      APILogger.warn(s"Skipping ${res.size - 1} attribute results and returning head.");
+      new Attribute(res.head)
+    } else {
+      new Attribute(res.head)
+    }
   }
 
   def findSingle[T](field: FieldLike[T], characterId: String): Option[FieldAttribute[T]] = {
@@ -89,9 +104,7 @@ object Attribute {
   }
 
   def findMatching(fieldMatcher: Attribute => Boolean, characterId: String): List[Attribute] = {
-    val query = js.Dynamic.literal(
-      "type" -> Roll20ObjectTypes.attribute,
-      Properties.characterid -> characterId);
+    val query = js.Dynamic.literal("type" -> Roll20ObjectTypes.attribute, Properties.characterid -> characterId);
     val res = findObjs(query).toList;
     res.map(o => new Attribute(o)).filter(fieldMatcher)
   }
@@ -135,8 +148,8 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
   import Attribute._;
 
   /**
-   * ID of the character this attribute belongs to. Read-only.
-   */
+    * ID of the character this attribute belongs to. Read-only.
+    */
   def characterId: String = raw.get(Properties.characterid).asInstanceOf[String];
   def character: Character = Character.get(characterId).get;
 
@@ -144,33 +157,35 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
   def name_=(s: String): Unit = raw.set(Properties.name, s);
 
   /**
-   * Try to extract the rowId from the name, if this is an attribute in a repeating section.
-   */
-  def getRowId: Option[String] = name match {
-    case rowIdPattern(rowId) => Some(rowId)
-    case _                   => None
-  }
+    * Try to extract the rowId from the name, if this is an attribute in a repeating section.
+    */
+  def getRowId: Option[String] =
+    name match {
+      case rowIdPattern(rowId) => Some(rowId)
+      case _                   => None
+    }
 
   /**
-   * The current value of the attribute can be accessed in chat and macros with the syntax
-   * &#64;{Character Name|Attribute Name} or in abilities with the syntax &#64;{Attribute Name}.
-   */
+    * The current value of the attribute can be accessed in chat and macros with the syntax
+    * &#64;{Character Name|Attribute Name} or in abilities with the syntax &#64;{Attribute Name}.
+    */
   def current: String = raw.get(Properties.current).toString;
   def current_=(s: String): Unit = raw.set(Properties.current, s);
   def currentWithWorker(s: String): Future[Unit] = {
-    val p = Promise[Unit];
+    val p = Promise[Unit]();
     onSheetWorkerCompleted(() => p.success(()));
     raw.setWithWorker(js.Dynamic.literal(Properties.current -> s));
     p.future
   }
+
   /**
-   * The max value of the attribute can be accessed in chat and macros with the syntax
-   * &#64;{Character Name|Attribute Name|max} or in abilities with the syntax &#64;{Attribute Name|max}.
-   */
+    * The max value of the attribute can be accessed in chat and macros with the syntax
+    * &#64;{Character Name|Attribute Name|max} or in abilities with the syntax &#64;{Attribute Name|max}.
+    */
   def max: String = raw.get(Properties.max).toString;
   def max_=(s: String): Unit = raw.set(Properties.max, s);
   def maxWithWorker(s: String): Future[Unit] = {
-    val p = Promise[Unit];
+    val p = Promise[Unit]();
     onSheetWorkerCompleted(() => p.success(()));
     raw.setWithWorker(js.Dynamic.literal(Properties.max -> s));
     p.future
@@ -179,8 +194,8 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
   override def toString(): String = s"Attribute(${js.JSON.stringify(raw)})";
 
   /**
-   * Returns this attribute as typed by the given field.
-   */
+    * Returns this attribute as typed by the given field.
+    */
   def typed[T](f: FieldLike[T]): FieldAttribute[T] = {
     //assert(this.name == f.name); // doesn't hold for repeating sections
     new FieldAttribute(f, this.raw);
@@ -188,42 +203,50 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
 }
 
 /**
- * Typed version of an attribute, based on SheetModel fields.
- *
- * @tparam T type of the attribute
- */
+  * Typed version of an attribute, based on SheetModel fields.
+  *
+  * @tparam T type of the attribute
+  */
 class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Object) extends Attribute(_raw) {
 
   /**
-   * Get the current value of the attributed converted to `T` via the field's readable instance.
-   */
+    * Get the current value of the attributed converted to `T` via the field's readable instance.
+    */
   def apply(): T = {
-    val rawV = if (field.isMax) { super.max } else { super.current };
+    val rawV = if (field.isMax) {
+      super.max
+    } else {
+      super.current
+    };
     val vO = field.read(rawV);
     vO.get
   }
 
   /**
-   * Get the current value of the attributed converted to `T` via the field's readable instance, as on `Option`
-   * in case the conversion doesn't work (or the field is actually empty).
-   */
+    * Get the current value of the attributed converted to `T` via the field's readable instance, as on `Option`
+    * in case the conversion doesn't work (or the field is actually empty).
+    */
   def get: Option[T] = {
-    val rawV = if (field.isMax) { super.max } else { super.current };
+    val rawV = if (field.isMax) {
+      super.max
+    } else {
+      super.current
+    };
     field.read(rawV)
   }
 
   /**
-   * Get the current value of the attributed converted to `T` via the field's readable instance,
-   * or the default value in case the conversion doesn't work or the field is actually empty.
-   */
+    * Get the current value of the attributed converted to `T` via the field's readable instance,
+    * or the default value in case the conversion doesn't work or the field is actually empty.
+    */
   def getOrDefault: T = {
     this.get.getOrElse(field.read(field.initialValue).get)
   }
 
   /**
-   * Update the field value, converting `T` to string via the provided
-   * [[com.lkroll.roll20.core.StringSerialiser[T] StringSerialiser]].
-   */
+    * Update the field value, converting `T` to string via the provided
+    * `com.lkroll.roll20.core.StringSerialiser[T]`.
+    */
   def <<=(t: T)(implicit ser: StringSerialiser[T]): Unit = {
     val stringV = ser.serialise(t);
     if (field.isMax) {
@@ -234,13 +257,11 @@ class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Objec
   }
 
   /**
-   * Update the field value, converting `T` to string via the provided
-   * [[com.lkroll.roll20.core.StringSerialiser[T] StringSerialiser]].
-   *
-   * Test [[scala.Unit]]
-   *
-   * Also trigger associated sheet workers.
-   */
+    * Update the field value, converting `T` to string via the provided
+    * `com.lkroll.roll20.core.StringSerialiser[T]`.
+    *
+    * Also trigger associated sheet workers.
+    */
   def setWithWorker(t: T)(implicit ser: StringSerialiser[T]): Future[Unit] = {
     val stringV = ser.serialise(t);
     if (field.isMax) {
