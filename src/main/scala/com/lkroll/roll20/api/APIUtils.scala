@@ -44,8 +44,7 @@ trait APIUtils {
    */
   def extractSimpleRowId(id: String): String = id.split('_').last;
 
-  /**
-    * Generate a new repeating section rowId with the same code as the sheetworkers use.
+  /** Generate a new repeating section rowId with the same code as the sheetworkers use.
     *
     * If generating multiple rowIds in a row, make sure to double check for duplicates, as generation is time seeded.
     *
@@ -53,8 +52,7 @@ trait APIUtils {
     */
   def generateRowId(): String = Roll20Extras.generateRowID();
 
-  /**
-    * Generate `n` new repeating section rowIDs with the same code as the sheetworkers use.
+  /** Generate `n` new repeating section rowIDs with the same code as the sheetworkers use.
     *
     * This implementation avoids generating duplicates,
     * but it will block until it has the full number of IDs available,
@@ -227,14 +225,12 @@ case class ContextAPIUtils(context: ChatContext) extends APIUtils {
   override def outputTemplate: Option[TemplateRef] = context.outputTemplate;
 }
 
-/**
-  * Maintains the last generated rowId to make sure that [[RowIdPool.generateRowId]] never emits duplicates.
+/** Maintains the last generated rowId to make sure that [[RowIdPool.generateRowId]] never emits duplicates.
   */
 class RowIdPool {
   private var lastId: Option[String] = None;
 
-  /**
-    * Generate a new repeating section rowId with the same code as the sheetworkers use.
+  /** Generate a new repeating section rowId with the same code as the sheetworkers use.
     *
     * This method guarantees that no duplicates will be generated, at the cost of potentially hot-blocking
     * the execution if fresh ids are requested more rapidly than can be accommodated.

@@ -117,18 +117,15 @@ object Graphic {
 sealed abstract class Graphic protected (val raw: Roll20Object) extends Roll20Managed {
   import Graphic._;
 
-  /**
-    * May be "token" (for tokens and maps) or "card" (for cards). Read-only.
+  /** May be "token" (for tokens and maps) or "card" (for cards). Read-only.
     */
   def subtype: String = raw.get(Properties.subtype).asInstanceOf[String];
 
-  /**
-    * ID of the page the object is in. Read-only.
+  /** ID of the page the object is in. Read-only.
     */
   def pageId: String = raw.get(Properties.pageid).asInstanceOf[String];
 
-  /**
-    * The URL of the graphic's image.
+  /** The URL of the graphic's image.
     * See the note about avatar and imgsrc restrictions
     * at [[https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions Roll20 Docs]].
     */
@@ -144,8 +141,7 @@ sealed abstract class Graphic protected (val raw: Roll20Object) extends Roll20Ma
   def name: String = raw.get(Properties.name).asInstanceOf[String];
   def name_=(s: String): Unit = raw.set(Properties.name, s);
 
-  /**
-    * List currently active status markers.
+  /** List currently active status markers.
     *
     * @return A list of currently active status markers.
     */
@@ -163,8 +159,7 @@ sealed abstract class Graphic protected (val raw: Roll20Object) extends Roll20Ma
     raw.set(Properties.statusmarkers, stringified);
   }
 
-  /**
-    * Same as `statusMarkers` but without the counts.
+  /** Same as `statusMarkers` but without the counts.
     *
     * @return A list of currently active status markers with counts removed.
     */
@@ -178,8 +173,7 @@ sealed abstract class Graphic protected (val raw: Roll20Object) extends Roll20Ma
 class Card(_raw: Roll20Object) extends Graphic(_raw) {
   import Graphic._;
 
-  /**
-    * Set to an ID if the graphic is a card. Read-only.
+  /** Set to an ID if the graphic is a card. Read-only.
     */
   def cardId: String = raw.get(Properties.cardid).asInstanceOf[String];
 
@@ -191,14 +185,12 @@ class Card(_raw: Roll20Object) extends Graphic(_raw) {
 class Token(_raw: Roll20Object) extends Graphic(_raw) {
   import Graphic._;
 
-  /**
-    * ID of the character this token represents.
+  /** ID of the character this token represents.
     */
   def representsId: String = raw.get(Properties.represents).asInstanceOf[String];
   def representsId_=(s: String): Unit = raw.set(Properties.represents, s);
 
-  /**
-    * The character this token represents.
+  /** The character this token represents.
     */
   def represents: Option[Character] = {
     val cid = representsId;

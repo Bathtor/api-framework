@@ -71,8 +71,7 @@ object Character {
 class Character private (val raw: Roll20Object) extends Roll20Managed with AttributeContext {
   import Character._;
 
-  /**
-    * URL to an image used for the character.
+  /** URL to an image used for the character.
     *
     * See the note about avatar and imgsrc restrictions
     * at [[https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions Roll20 Docs]].
@@ -93,8 +92,7 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
   def archived: Boolean = raw.get(Properties.archived).asInstanceOf[Boolean];
   def archived_=(b: Boolean): Unit = raw.set(Properties.archived, b);
 
-  /**
-    * Comma-delimited list of player ID who can view this character.
+  /** Comma-delimited list of player ID who can view this character.
     *
     * Use "all" to give all players the ability to view.
     */
@@ -107,8 +105,7 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
     raw.set(Properties.inplayerjournals, s);
   }
 
-  /**
-    * Comma-delimited list of player IDs who can control and edit this character.
+  /** Comma-delimited list of player IDs who can control and edit this character.
     *
     * Use "all" to give all players the ability to edit.
     */
@@ -125,8 +122,7 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
 
   def attributesForName(name: String): List[Attribute] = Attribute.find(name, this.id);
 
-  /**
-    * Gets the current value of the field indicated by `name`.
+  /** Gets the current value of the field indicated by `name`.
     *
     * The value is cast to the requested `T`.
     * If you are unsure what the correct type is, select `T = js.Any`
@@ -138,8 +134,7 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
     getAttrByName(this.id, name).toOption.map(_.asInstanceOf[T])
   }
 
-  /**
-    * Gets the current value of the `field`, converted to `T`.
+  /** Gets the current value of the `field`, converted to `T`.
     *
     * Works for fields at default value.
     *

@@ -28,32 +28,27 @@ import com.lkroll.roll20.core.FieldLike
 
 trait AttributeContext {
 
-  /**
-    * Fetches or creates an attribute for the given field.
+  /** Fetches or creates an attribute for the given field.
     */
   def attribute[T](field: FieldLike[T]): FieldAttribute[T];
 
-  /**
-    * Fetches the attribute for the given field, if it exists.
+  /** Fetches the attribute for the given field, if it exists.
     *
     * Note that Roll20 does not create attribute objects for fields at their default value!
     */
   def getAttribute[T](field: FieldLike[T]): Option[FieldAttribute[T]];
   //def attributes[T](field: FieldLike[T]): List[FieldAttribute[T]]; // not sure this actually makes any sense
-  /**
-    * Fetch all instances of this repeating section attribute.
+  /** Fetch all instances of this repeating section attribute.
     *
     * Note: As far as I can tell this also works for fields at their default value.
     */
   def repeating[T](field: FieldLike[T]): List[FieldAttribute[T]];
 
-  /**
-    * Fetch the instance at `rowId` of this repeating section attribute, if it exists.
+  /** Fetch the instance at `rowId` of this repeating section attribute, if it exists.
     */
   def repeatingAt[T](rowId: String)(field: FieldLike[T]): Option[FieldAttribute[T]];
 
-  /**
-    * Fetch all items in all rows of the given repeating section.
+  /** Fetch all items in all rows of the given repeating section.
     */
   def repeatingSection[T](sectionName: String): List[Attribute];
 

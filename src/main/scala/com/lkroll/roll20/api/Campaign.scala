@@ -33,8 +33,7 @@ import util.{Failure, Success, Try}
 object Campaign {
   def apply(): Campaign = new Campaign(Roll20API.Campaign());
 
-  /**
-    * The default colour token markers.
+  /** The default colour token markers.
     *
     * These aren't returned by `Campaign.tokenMarkers`.
     *
@@ -66,8 +65,7 @@ class Campaign(val raw: Roll20API.Roll20Object) extends Roll20Managed {
 
   lazy val turnOrder: TurnOrder = new TurnOrder(this);
 
-  /**
-    * ID of the page used for the tracker when the turn order window is open.
+  /** ID of the page used for the tracker when the turn order window is open.
     *
     * When set to false, the turn order window closes.
     */
@@ -82,8 +80,7 @@ class Campaign(val raw: Roll20API.Roll20Object) extends Roll20Managed {
     raw.set(Properties.initiativepage, s);
   }
 
-  /**
-    * ID of the page the player bookmark is set to.
+  /** ID of the page the player bookmark is set to.
     *
     * Players see this page by default, unless overridden by `playerSpecificPages`.
     */
@@ -99,8 +96,7 @@ class Campaign(val raw: Roll20API.Roll20Object) extends Roll20Managed {
   }
   // TODO
 
-  /**
-    * A map from player id to page id.
+  /** A map from player id to page id.
     *
     * Any player set to a page in this object will override the `playerPageId`.
     */
@@ -116,8 +112,7 @@ class Campaign(val raw: Roll20API.Roll20Object) extends Roll20Managed {
   // _journalfolder	A JSON string which contains data about the folder structure of the game. Read-only.
   // _jukeboxfolder		A JSON string which contains data about the jukebox playlist structure of the game. Read-only.
 
-  /**
-    * List of all token markers in the campaign.
+  /** List of all token markers in the campaign.
     *
     * Read-only.
     *

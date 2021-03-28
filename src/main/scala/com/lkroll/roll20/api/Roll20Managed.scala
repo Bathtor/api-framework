@@ -36,27 +36,23 @@ object Roll20Managed {
 trait Roll20Managed {
   import Roll20Managed._;
 
-  /**
-    * The underlying facade object.
+  /** The underlying facade object.
     */
   def raw: Roll20Object;
 
-  /**
-    * Removed the object from Roll20.
+  /** Removed the object from Roll20.
     *
     * Using the object afterwards is unspecified behaviour!
     */
   def remove(): Unit = raw.remove();
 
-  /**
-    * A unique ID for this object.
+  /** A unique ID for this object.
     *
     * Globally unique across all objects in this game. Read-only.
     */
   def id: String = raw.get(Properties.id).asInstanceOf[String];
 
-  /**
-    * Can be used to identify the object type or search for the object. Read-only.
+  /** Can be used to identify the object type or search for the object. Read-only.
     */
   def `type`: String = raw.get(Properties.`type`).asInstanceOf[String];
 }

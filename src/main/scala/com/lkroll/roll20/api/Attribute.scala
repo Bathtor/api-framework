@@ -147,8 +147,7 @@ object Attribute {
 class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
   import Attribute._;
 
-  /**
-    * ID of the character this attribute belongs to. Read-only.
+  /** ID of the character this attribute belongs to. Read-only.
     */
   def characterId: String = raw.get(Properties.characterid).asInstanceOf[String];
   def character: Character = Character.get(characterId).get;
@@ -156,8 +155,7 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
   def name: String = raw.get(Properties.name).asInstanceOf[String];
   def name_=(s: String): Unit = raw.set(Properties.name, s);
 
-  /**
-    * Try to extract the rowId from the name, if this is an attribute in a repeating section.
+  /** Try to extract the rowId from the name, if this is an attribute in a repeating section.
     */
   def getRowId: Option[String] =
     name match {
@@ -165,8 +163,7 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
       case _                   => None
     }
 
-  /**
-    * The current value of the attribute can be accessed in chat and macros with the syntax
+  /** The current value of the attribute can be accessed in chat and macros with the syntax
     * &#64;{Character Name|Attribute Name} or in abilities with the syntax &#64;{Attribute Name}.
     */
   def current: String = raw.get(Properties.current).toString;
@@ -178,8 +175,7 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
     p.future
   }
 
-  /**
-    * The max value of the attribute can be accessed in chat and macros with the syntax
+  /** The max value of the attribute can be accessed in chat and macros with the syntax
     * &#64;{Character Name|Attribute Name|max} or in abilities with the syntax &#64;{Attribute Name|max}.
     */
   def max: String = raw.get(Properties.max).toString;
@@ -193,8 +189,7 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
 
   override def toString(): String = s"Attribute(${js.JSON.stringify(raw)})";
 
-  /**
-    * Returns this attribute as typed by the given field.
+  /** Returns this attribute as typed by the given field.
     */
   def typed[T](f: FieldLike[T]): FieldAttribute[T] = {
     //assert(this.name == f.name); // doesn't hold for repeating sections
@@ -202,15 +197,13 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
   }
 }
 
-/**
-  * Typed version of an attribute, based on SheetModel fields.
+/** Typed version of an attribute, based on SheetModel fields.
   *
   * @tparam T type of the attribute
   */
 class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Object) extends Attribute(_raw) {
 
-  /**
-    * Get the current value of the attributed converted to `T` via the field's readable instance.
+  /** Get the current value of the attributed converted to `T` via the field's readable instance.
     */
   def apply(): T = {
     val rawV = if (field.isMax) {
@@ -222,8 +215,7 @@ class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Objec
     vO.get
   }
 
-  /**
-    * Get the current value of the attributed converted to `T` via the field's readable instance, as on `Option`
+  /** Get the current value of the attributed converted to `T` via the field's readable instance, as on `Option`
     * in case the conversion doesn't work (or the field is actually empty).
     */
   def get: Option[T] = {
@@ -235,16 +227,14 @@ class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Objec
     field.read(rawV)
   }
 
-  /**
-    * Get the current value of the attributed converted to `T` via the field's readable instance,
+  /** Get the current value of the attributed converted to `T` via the field's readable instance,
     * or the default value in case the conversion doesn't work or the field is actually empty.
     */
   def getOrDefault: T = {
     this.get.getOrElse(field.read(field.initialValue).get)
   }
 
-  /**
-    * Update the field value, converting `T` to string via the provided
+  /** Update the field value, converting `T` to string via the provided
     * `com.lkroll.roll20.core.StringSerialiser[T]`.
     */
   def <<=(t: T)(implicit ser: StringSerialiser[T]): Unit = {
@@ -256,8 +246,7 @@ class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Objec
     };
   }
 
-  /**
-    * Update the field value, converting `T` to string via the provided
+  /** Update the field value, converting `T` to string via the provided
     * `com.lkroll.roll20.core.StringSerialiser[T]`.
     *
     * Also trigger associated sheet workers.
