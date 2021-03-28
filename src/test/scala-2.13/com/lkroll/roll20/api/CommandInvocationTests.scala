@@ -24,7 +24,6 @@
  */
 package com.lkroll.roll20.api
 
-//import org.scalatest._
 import org.scalatest.funsuite._
 import org.scalatest.matchers.should.Matchers
 import com.lkroll.roll20.api.conf._

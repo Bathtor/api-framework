@@ -75,6 +75,18 @@ object Attribute {
     res.map(o => new Attribute(o))
   }
 
+  def findOrCreate(name: String, characterId: String): Attribute = {
+    val res = findRaw(name, characterId);
+    if (res.isEmpty) {
+      create(characterId, name)
+    } else if (res.size > 1) {
+      APILogger.warn(s"Skipping ${res.size - 1} attribute results and returning head.");
+      new Attribute(res.head)
+    } else {
+      new Attribute(res.head)
+    }
+  }
+
   def findSingle[T](field: FieldLike[T], characterId: String): Option[FieldAttribute[T]] = {
     val res = findRaw(field.qualifiedAttr, characterId);
     if (res.size > 1) {
@@ -233,7 +245,7 @@ class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Objec
 
   /**
     * Update the field value, converting `T` to string via the provided
-    * [[com.lkroll.roll20.core.StringSerialiser[T] StringSerialiser]].
+    * `com.lkroll.roll20.core.StringSerialiser[T]`.
     */
   def <<=(t: T)(implicit ser: StringSerialiser[T]): Unit = {
     val stringV = ser.serialise(t);
@@ -246,9 +258,7 @@ class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Objec
 
   /**
     * Update the field value, converting `T` to string via the provided
-    * [[com.lkroll.roll20.core.StringSerialiser[T] StringSerialiser]].
-    *
-    * Test [[scala.Unit]]
+    * `com.lkroll.roll20.core.StringSerialiser[T]`.
     *
     * Also trigger associated sheet workers.
     */

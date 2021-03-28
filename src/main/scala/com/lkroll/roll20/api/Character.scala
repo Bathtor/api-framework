@@ -128,10 +128,14 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
   /**
     * Gets the current value of the field indicated by `name`.
     *
+    * The value is cast to the requested `T`.
+    * If you are unsure what the correct type is, select `T = js.Any`
+    * and match on the result.
+    *
     * Works for fields at default value.
     */
-  def attributeValue[T](name: String): Option[Any] = {
-    getAttrByName(this.id, name).toOption
+  def attributeValue[T](name: String): Option[T] = {
+    getAttrByName(this.id, name).toOption.map(_.asInstanceOf[T])
   }
 
   /**

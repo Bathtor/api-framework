@@ -24,7 +24,7 @@
  */
 package com.lkroll.roll20.api.templates
 
-import com.lkroll.roll20.core._
+import com.lkroll.roll20.core.{TemplateApplication => _, _}
 
 trait TemplateImplicits extends TemplateCoreImplicits {
   def templateV[T](t: (String, T))(implicit conv: T => TemplateVal): TemplateVar = {

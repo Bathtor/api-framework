@@ -212,6 +212,27 @@ class Token(_raw: Roll20Object) extends Graphic(_raw) {
     representsId = c.id;
   }
 
+  def showName: Boolean = raw.get(Properties.showname).asInstanceOf[Boolean];
+  def showName_=(b: Boolean) = raw.set(Properties.showname, b);
+
+  private def barLinkAttr(property: String): Option[Attribute] =
+    represents.flatMap { char =>
+      val attrId = raw.get(property).asInstanceOf[String];
+      Attribute.get(attrId)
+    };
+
+  private def barLinkSetAttr(property: String, attr: Attribute): Unit = {
+    assert(representsId == attr.characterId);
+    raw.set(property, attr.raw.id);
+  }
+
+  def bar1Link: Option[Attribute] = barLinkAttr(Properties.bar1Link);
+  def bar1Link_=(attr: Attribute) = barLinkSetAttr(Properties.bar1Link, attr);
+  def bar2Link: Option[Attribute] = barLinkAttr(Properties.bar2Link);
+  def bar2Link_=(attr: Attribute) = barLinkSetAttr(Properties.bar2Link, attr);
+  def bar3Link: Option[Attribute] = barLinkAttr(Properties.bar2Link);
+  def bar3Link_=(attr: Attribute) = barLinkSetAttr(Properties.bar3Link, attr);
+
   // TODO the rest oO
 
   override def toString(): String = s"Token(${js.JSON.stringify(raw)})";

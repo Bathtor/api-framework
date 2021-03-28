@@ -4,15 +4,17 @@ name := "Roll20 API Framework"
 
 organization := "com.lkroll.roll20"
 
-version := "0.11.1"
+version := "0.11.2"
 
 scalaVersion := "2.13.5"
-crossScalaVersions in ThisBuild := Seq("2.11.12", "2.12.13", "2.13.5")
+crossScalaVersions := Seq("2.12.13", "2.13.5")
 
 scalacOptions ++= Seq(
-	"-deprecation",
-	//"-Xfatal-warnings",
-	"-Xlint"
+  "-feature",
+  "-language:implicitConversions",
+  "-deprecation",
+  //"-Xfatal-warnings",
+  "-Xlint"
 )
 
 resolvers += Resolver.bintrayRepo("lkrollcom", "maven")
