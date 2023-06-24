@@ -65,34 +65,37 @@ class Campaign(val raw: Roll20API.Roll20Object) extends Roll20Managed {
 
   lazy val turnOrder: TurnOrder = new TurnOrder(this);
 
-  /** ID of the page used for the tracker when the turn order window is open.
-    *
-    * When set to false, the turn order window closes.
-    */
-  def initiativePage: Option[String] = {
-    raw.get(Properties.initiativepage).asInstanceOf[String] match {
-      case "false" => None
-      case s       => Some(s)
+  private def readFalseOrId(jsValue: js.Any): Option[String] = {
+    if (jsValue.isInstanceOf[Boolean]) {
+      assert(!jsValue.asInstanceOf[Boolean], "true is not an expected value");
+      None
+    } else {
+      Some(jsValue.asInstanceOf[String])
     }
   }
-  def initiativePage_=(v: Option[String]): Unit = {
-    val s = v.getOrElse("false");
-    raw.set(Properties.initiativepage, s);
-  }
+
+  // /** ID of the page used for the tracker when the turn order window is open.
+  //   *
+  //   * When set to false, the turn order window closes.
+  //   */
+  // def initiativePage: Option[String] = readFalseOrId(raw.get(Properties.initiativepage));
+  // def initiativePage_=(v: Option[String]): Unit = {
+  //   val jsValue = v.map(_.asInstanceOf[js.Any]).getOrElse(false.asInstanceOf[js.Any]);
+  //   raw.set(Properties.initiativepage, jsValue);
+  // }
+
+  // Roll20 documentation appears to be wrong here, this field just returns true when tracker
+  // is open and false when its closed.
+  def initiativePage: Boolean = raw.get(Properties.initiativepage).asInstanceOf[Boolean];
 
   /** ID of the page the player bookmark is set to.
     *
     * Players see this page by default, unless overridden by `playerSpecificPages`.
     */
-  def playerPageId: Option[String] = {
-    raw.get(Properties.playerpageid).asInstanceOf[String] match {
-      case "false" => None
-      case s       => Some(s)
-    }
-  }
+  def playerPageId: Option[String] = readFalseOrId(raw.get(Properties.playerpageid));
   def playerPageId_=(v: Option[String]): Unit = {
-    val s = v.getOrElse("false");
-    raw.set(Properties.playerpageid, s);
+    val jsValue = v.map(_.asInstanceOf[js.Any]).getOrElse(false.asInstanceOf[js.Any]);
+    raw.set(Properties.playerpageid, jsValue);
   }
   // TODO
 
@@ -138,40 +141,82 @@ class Campaign(val raw: Roll20API.Roll20Object) extends Roll20Managed {
 
 case class TokenMarker(id: Int, name: String, tag: String, url: String)
 
+sealed trait PositionValue extends Ordered[PositionValue] {
+  def toJs: js.Any
+}
+object PositionValue {
+
+  case class IntValue(i: Int) extends PositionValue {
+    override def toJs: js.Any = i
+
+    override def compare(that: PositionValue): Int = that match {
+      case DoubleValue(thatD) => i.toDouble.compare(thatD)
+      case IntValue(thatI)    => i.compare(thatI)
+      case StringValue(thatS) => i.toString.compare(thatS)
+    }
+  }
+  case class DoubleValue(d: Double) extends PositionValue {
+    override def toJs: js.Any = d
+
+    override def compare(that: PositionValue): Int = that match {
+      case DoubleValue(thatD) => d.compare(thatD)
+      case IntValue(thatI)    => d.compare(thatI.toDouble)
+      case StringValue(thatS) => d.toString.compare(thatS)
+    }
+  }
+  case class StringValue(s: String) extends PositionValue {
+    override def toJs: js.Any = s
+
+    override def compare(that: PositionValue): Int = that match {
+      case DoubleValue(thatD) => s.compare(thatD.toString)
+      case IntValue(thatI)    => s.compare(thatI.toString)
+      case StringValue(thatS) => s.compare(thatS)
+    }
+  }
+
+  def read(raw: js.Any): PositionValue = {
+    // Pattern matching doesn't work, because the compiler is being too smart -.-
+    if (raw.isInstanceOf[Int]) {
+      IntValue(raw.asInstanceOf[Int])
+    } else if (raw.isInstanceOf[Double]) {
+      DoubleValue(raw.asInstanceOf[Double])
+    } else {
+      StringValue(raw.toString)
+    }
+  }
+}
+
 object TurnOrder {
   sealed trait Entry {
     def id: String;
-    def pr: Either[Int, String];
-    def prString: String =
-      pr match {
-        case Left(i)  => i.toString
-        case Right(s) => s
-      };
+    def pr: PositionValue;
     def custom: String;
-    def write(): String = s"""{"id" : "$id", "pr" : "$prString", "custom" : "$custom"}""";
+    def pageId: String;
+    def toJs: js.Dynamic = js.Dynamic.literal(
+      id = id,
+      pr = pr.toJs,
+      custom = custom,
+      `_pageid` = pageId
+    );
   }
-  case class CustomEntry(custom: String, pr: Either[Int, String]) extends Entry {
+  case class CustomEntry(custom: String, pr: PositionValue, pageId: String) extends Entry {
     override def id: String = "-1";
   }
-  case class TokenEntry(id: String, pr: Either[Int, String]) extends Entry {
+  case class TokenEntry(id: String, pr: PositionValue, pageId: String) extends Entry {
     override def custom: String = "";
   }
 
   def readEntry(raw: js.Dynamic): Try[Entry] = {
     Try {
-      if (raw.id.asInstanceOf[String] == "-1") {
-        CustomEntry(raw.custom.asInstanceOf[String], readPr(raw.pr))
+      val id = raw.id.asInstanceOf[String];
+      if (id == "-1") {
+        CustomEntry(
+          raw.custom.asInstanceOf[String],
+          PositionValue.read(raw.pr),
+          raw.`_pageid`.asInstanceOf[String])
       } else {
-        TokenEntry(raw.id.asInstanceOf[String], readPr(raw.pr))
+        TokenEntry(id, PositionValue.read(raw.pr), raw.`_pageid`.asInstanceOf[String])
       }
-    }
-  }
-
-  def readPr(raw: js.Dynamic): Either[Int, String] = {
-    val s = raw.toString; // could be either a number or a string
-    Try(s.trim.toInt) match {
-      case Success(i) => Left(i)
-      case Failure(_) => Right(s)
     }
   }
 }
@@ -185,6 +230,7 @@ class TurnOrder(private val campaign: Campaign) {
     APILogger.debug(s"Read turnoder to '$jsonString'");
     val jsonArray = JSON.parse(jsonString).asInstanceOf[js.Array[js.Dynamic]];
     val tried = jsonArray.toList.map(o => TurnOrder.readEntry(o));
+    APILogger.debug(s"Got entries with try: ${tried.mkString(", ")}")
     tried.flatMap {
       case Success(e) => Some(e)
       case Failure(e) => APILogger.error(e); None
@@ -192,7 +238,8 @@ class TurnOrder(private val campaign: Campaign) {
   }
 
   def set(l: List[Entry]): Unit = {
-    val jsonString = l.map(_.write()).mkString("[", ",", "]");
+    val jsRaw = js.Array(l.map(_.toJs): _*)
+    val jsonString = JSON.stringify(jsRaw);
     APILogger.debug(s"About to set turnoder to '$jsonString'");
     campaign.raw.set(Properties.turnorder, jsonString);
   }
@@ -234,29 +281,11 @@ class TurnOrder(private val campaign: Campaign) {
   }
 
   def sortAsc(): Unit = {
-    modify(_.sortWith({
-      case (left, right) => {
-        (left.pr, right.pr) match {
-          case (Left(li), Left(ri))   => li < ri
-          case (Left(li), Right(rs))  => li.toString < rs
-          case (Right(ls), Left(ri))  => ls < ri.toString
-          case (Right(ls), Right(rs)) => ls < rs
-        }
-      }
-    }))
+    modify(_.sortBy(_.pr))
   }
 
   def sortDesc(): Unit = {
-    modify(_.sortWith({
-      case (left, right) => {
-        (left.pr, right.pr) match {
-          case (Left(li), Left(ri))   => li > ri
-          case (Left(li), Right(rs))  => li.toString > rs
-          case (Right(ls), Left(ri))  => ls > ri.toString
-          case (Right(ls), Right(rs)) => ls > rs
-        }
-      }
-    }))
+    modify(_.sortBy(_.pr).reverse)
   }
 
   def dedup(keepFirst: Boolean = false): Unit = {
