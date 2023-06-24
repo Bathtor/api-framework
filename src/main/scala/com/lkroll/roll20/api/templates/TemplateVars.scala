@@ -72,23 +72,23 @@ object TemplateVar {
   import TemplateVal._;
   import CoreImplicits._;
 
-  def parser[_: P] =
+  def parser[$: P] =
     P("{{" ~ keyParser ~ "=" ~/ valueParser ~ "}}").map(t => TemplateVar(t._1, t._2));
-  def keyParser[_: P]: P[String] = P(CharsWhile(c => c != '=' && c != '{' && c != '}').!);
-  def valueParser[_: P]: P[TemplateVal] =
+  def keyParser[$: P]: P[String] = P(CharsWhile(c => c != '=' && c != '{' && c != '}').!);
+  def valueParser[$: P]: P[TemplateVal] =
     P(emptyValueParser | translationLabelParser | inlineRollParser | inlineRollRefParser | rawParser);
 
-  def emptyValueParser[_: P]: P[TemplateVal] = P(&("}}")).map(_ => Empty);
-  def inlineRollRefParser[_: P]: P[TemplateVal] =
+  def emptyValueParser[$: P]: P[TemplateVal] = P(&("}}")).map(_ => Empty);
+  def inlineRollRefParser[$: P]: P[TemplateVal] =
     P("$[[" ~/ ws ~ CharIn("0-9").rep(1).! ~ ws ~ "]]").map(s => InlineRollRef(s.toInt));
-  def inlineRollParser[_: P]: P[TemplateVal] =
+  def inlineRollParser[$: P]: P[TemplateVal] =
     P("[[" ~/ ws ~ ArithmeticParsers.intExpression ~ ws ~ "]]").map(e => InlineRoll(e));
-  def translationLabelParser[_: P]: P[TemplateVal] =
+  def translationLabelParser[$: P]: P[TemplateVal] =
     P("^{" ~/ CharsWhile(_ != '}').rep.! ~ "}").map(s => TranslationKey(s));
-  def rawParser[_: P]: P[TemplateVal] =
+  def rawParser[$: P]: P[TemplateVal] =
     P(CharsWhile(c => c != '=' && c != '{' && c != '}' && c != '^').!).map(s => Raw(s));
 
-  def ws[_: P] = P(" ".rep);
+  def ws[$: P] = P(" ".rep);
 
   def fromString(s: String): Option[TemplateVar] = {
     parse(s, parser(_)) match {
@@ -128,7 +128,7 @@ case class TemplateVars(vars: List[TemplateVar]) extends Renderable {
 object TemplateVars extends org.rogach.scallop.ValueConverter[TemplateVars] {
   import org.rogach.scallop._;
 
-  def parser[_: P] =
+  def parser[$: P] =
     P(CharsWhile(_ != '{').rep ~ (TemplateVar.parser ~ CharsWhileIn(" ").?).rep ~/ AnyChar.rep)
       .map(s => TemplateVars(s.toList));
 

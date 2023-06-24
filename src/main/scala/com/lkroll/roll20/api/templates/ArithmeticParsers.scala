@@ -28,19 +28,13 @@ import com.lkroll.roll20.core._
 import fastparse._
 
 object ArithmeticParsers {
-  // val White = WhitespaceApi.Wrapper{
-  //   import fastparse.all._
-  //   NoTrace(" ".rep)
-  // }
-  implicit val whitespace = { implicit ctx: ParsingRun[_] =>
-    CharsWhileIn(" ", 0)
-  }
+  import NoWhitespace._
 
-  def intExpression[_: P]: P[ArithmeticExpression[Int]] = P(intLiteral);
-  def floatExpression[_: P]: P[ArithmeticExpression[Float]] = P(floatLiteral);
-  def intLiteral[_: P]: P[Arith.Literal[Int]] =
+  def intExpression[$: P]: P[ArithmeticExpression[Int]] = P(intLiteral);
+  def floatExpression[$: P]: P[ArithmeticExpression[Float]] = P(floatLiteral);
+  def intLiteral[$: P]: P[Arith.Literal[Int]] =
     P(CharIn("0-9").rep(1).!).map(s => Arith.Literal(s.toInt));
-  def floatLiteral[_: P]: P[Arith.Literal[Float]] =
+  def floatLiteral[$: P]: P[Arith.Literal[Float]] =
     P((CharIn("0-9").rep(1) ~ "." ~/ CharIn("0-9").rep(1)).!).map(s => Arith.Literal(s.toFloat));
   // TODO all the rest oO
 
