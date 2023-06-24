@@ -105,7 +105,8 @@ class Campaign(val raw: Roll20API.Roll20Object) extends Roll20Managed {
       val jsonMap = raw.get(Properties.playerspecificpages).asInstanceOf[js.Dictionary[String]];
       jsonMap.toMap
     } catch {
-      case e: Throwable => Map.empty // could be false instead of object (stupid JS untyped APIs -.-)
+      case e: Throwable =>
+        Map.empty // could be false instead of object (stupid JS untyped APIs -.-)
     }
   }
   // TODO
@@ -116,19 +117,19 @@ class Campaign(val raw: Roll20API.Roll20Object) extends Roll20Managed {
     *
     * Read-only.
     *
-    * @return A list of all token markers in the campaign.
+    * @return
+    *   A list of all token markers in the campaign.
     */
   def tokenMarkers: List[TokenMarker] = {
     try {
       val stringifiedArray = raw.get(Properties.tokenmarkers).asInstanceOf[String];
       val parsed = js.JSON.parse(stringifiedArray).asInstanceOf[js.Array[js.Dynamic]];
       parsed.toList.map(entry =>
-        TokenMarker(entry.id.asInstanceOf[Int],
-                    entry.name.asInstanceOf[String],
-                    entry.tag.asInstanceOf[String],
-                    entry.url.asInstanceOf[String]
-        )
-      )
+        TokenMarker(
+          entry.id.asInstanceOf[Int],
+          entry.name.asInstanceOf[String],
+          entry.tag.asInstanceOf[String],
+          entry.url.asInstanceOf[String]))
     } catch {
       case e: Throwable => Nil
     }

@@ -27,7 +27,8 @@ package com.lkroll.roll20.api
 import com.lkroll.roll20.core.{APIButton, Renderable}
 import concurrent.ExecutionContext
 
-class APIOptionsException(message: String, val replyWith: Option[String] = None) extends Exception(message) {
+class APIOptionsException(message: String, val replyWith: Option[String] = None)
+  extends Exception(message) {
 
   def this(message: String, cause: Throwable) = {
     this(message);

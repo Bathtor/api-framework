@@ -30,9 +30,11 @@ import com.lkroll.roll20.api.facade.Roll20Objects._
 
 object Ability {
   def create(characterId: String, name: String): Ability = {
-    val ab = js.Dynamic.literal(_characterid = characterId, name = name).asInstanceOf[AbilityCreate];
+    val ab =
+      js.Dynamic.literal(_characterid = characterId, name = name).asInstanceOf[AbilityCreate];
     val abObj = createObj(Roll20ObjectTypes.ability, ab);
-    assert(abObj.get(Roll20Managed.Properties.`type`).asInstanceOf[String] == Roll20ObjectTypes.ability);
+    assert(
+      abObj.get(Roll20Managed.Properties.`type`).asInstanceOf[String] == Roll20ObjectTypes.ability);
     new Ability(abObj)
   }
 
@@ -42,16 +44,18 @@ object Ability {
   }
 
   def find(name: String, characterId: String): List[Ability] = {
-    val query = js.Dynamic.literal("type" -> Roll20ObjectTypes.ability,
-                                   Properties.name -> name,
-                                   Properties.characterid -> characterId
-    );
+    val query = js.Dynamic.literal(
+      "type" -> Roll20ObjectTypes.ability,
+      Properties.name -> name,
+      Properties.characterid -> characterId);
     val res = findObjs(query);
     res.map(o => new Ability(o)).toList
   }
 
   def findAll(characterId: String): List[Ability] = {
-    val query = js.Dynamic.literal("type" -> Roll20ObjectTypes.ability, Properties.characterid -> characterId);
+    val query = js.Dynamic.literal(
+      "type" -> Roll20ObjectTypes.ability,
+      Properties.characterid -> characterId);
     val res = findObjs(query);
     res.map(o => new Ability(o)).toList
   }
@@ -85,7 +89,8 @@ class Ability private (val raw: Roll20Object) extends Roll20Managed {
   def action: String = raw.get(Properties.action).asInstanceOf[String];
   def action_=(s: String): Unit = raw.set(Properties.action, s);
 
-  /** Is this ability a token action that should show up when tokens linked to its parent Character are selected?
+  /** Is this ability a token action that should show up when tokens linked to its parent Character
+    * are selected?
     */
   def isTokenAction: Boolean = raw.get(Properties.istokenaction).asInstanceOf[Boolean];
   def isTokenAction_=(b: Boolean): Unit = raw.set(Properties.istokenaction, b);

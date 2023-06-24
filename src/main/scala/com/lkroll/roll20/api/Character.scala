@@ -34,14 +34,20 @@ object Character {
   def create(): Character = {
     val c = js.Dynamic.literal().asInstanceOf[CharacterCreate];
     val cObj = createObj(Roll20ObjectTypes.character, c);
-    assert(cObj.get(Roll20Managed.Properties.`type`).asInstanceOf[String] == Roll20ObjectTypes.character);
+    assert(
+      cObj
+        .get(Roll20Managed.Properties.`type`)
+        .asInstanceOf[String] == Roll20ObjectTypes.character);
     new Character(cObj)
   }
 
   def create(name: String): Character = {
     val c = js.Dynamic.literal(name = name).asInstanceOf[CharacterCreate];
     val cObj = createObj(Roll20ObjectTypes.character, c);
-    assert(cObj.get(Roll20Managed.Properties.`type`).asInstanceOf[String] == Roll20ObjectTypes.character);
+    assert(
+      cObj
+        .get(Roll20Managed.Properties.`type`)
+        .asInstanceOf[String] == Roll20ObjectTypes.character);
     new Character(cObj)
   }
 
@@ -73,8 +79,8 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
 
   /** URL to an image used for the character.
     *
-    * See the note about avatar and imgsrc restrictions
-    * at [[https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions Roll20 Docs]].
+    * See the note about avatar and imgsrc restrictions at
+    * [[https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions Roll20 Docs]].
     */
   def avatar: URL = {
     val urlS = raw.get(Properties.avatar).asInstanceOf[String];
@@ -124,9 +130,8 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
 
   /** Gets the current value of the field indicated by `name`.
     *
-    * The value is cast to the requested `T`.
-    * If you are unsure what the correct type is, select `T = js.Any`
-    * and match on the result.
+    * The value is cast to the requested `T`. If you are unsure what the correct type is, select `T
+    * \= js.Any` and match on the result.
     *
     * Works for fields at default value.
     */
@@ -138,7 +143,9 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
     *
     * Works for fields at default value.
     *
-    * @return `None` if either the field does not exist, or the conversion failed, and `Some(T)` otherwise.
+    * @return
+    *   `None` if either the field does not exist, or the conversion failed, and `Some(T)`
+    *   otherwise.
     */
   def attributeValue[T](field: FieldLike[T]): Option[T] = {
     getAttrByName(this.id, field.qualifiedAttr).toOption.flatMap(s => field.read(s.toString))
@@ -150,19 +157,26 @@ class Character private (val raw: Roll20Object) extends Roll20Managed with Attri
       attr.current = field.initialValue;
       Some(attr.typed(field))
     }.get;
-  override def getAttribute[T](field: FieldLike[T]): Option[FieldAttribute[T]] = Attribute.findSingle(field, this.id);
-  //override def attributes[T](field: FieldLike[T]): List[FieldAttribute[T]] = Attribute.findAll(field, this.id);
-  override def repeating[T](field: FieldLike[T]): List[FieldAttribute[T]] = Attribute.findRepeating(field, this.id);
+  override def getAttribute[T](field: FieldLike[T]): Option[FieldAttribute[T]] =
+    Attribute.findSingle(field, this.id);
+  // override def attributes[T](field: FieldLike[T]): List[FieldAttribute[T]] = Attribute.findAll(field, this.id);
+  override def repeating[T](field: FieldLike[T]): List[FieldAttribute[T]] =
+    Attribute.findRepeating(field, this.id);
   override def repeatingAt[T](rowId: String)(field: FieldLike[T]): Option[FieldAttribute[T]] =
     Attribute.findRepeating(field, this.id, rowId);
   override def repeatingSection[T](sectionName: String): List[Attribute] =
     Attribute.findRepeating(sectionName, this.id);
-  override def createAttribute[T](field: FieldLike[T]): FieldAttribute[T] = Attribute.create(this.id, field);
-  override def createRepeating[T](field: FieldLike[T], providedRowId: Option[String] = None): FieldAttribute[T] =
+  override def createAttribute[T](field: FieldLike[T]): FieldAttribute[T] =
+    Attribute.create(this.id, field);
+  override def createRepeating[T](
+      field: FieldLike[T],
+      providedRowId: Option[String] = None): FieldAttribute[T] =
     Attribute.createRepeating(this.id, field, providedRowId);
 
   def cached(): AttributeCache = {
-    val query = js.Dynamic.literal("type" -> Roll20ObjectTypes.attribute, Attribute.Properties.characterid -> this.id);
+    val query = js.Dynamic.literal(
+      "type" -> Roll20ObjectTypes.attribute,
+      Attribute.Properties.characterid -> this.id);
     val res = findObjs(query).toList.map(o => new Attribute(o));
     new AttributeCache(res, this)
   }

@@ -38,7 +38,8 @@ object ArithmeticParsers {
 
   def intExpression[_: P]: P[ArithmeticExpression[Int]] = P(intLiteral);
   def floatExpression[_: P]: P[ArithmeticExpression[Float]] = P(floatLiteral);
-  def intLiteral[_: P]: P[Arith.Literal[Int]] = P(CharIn("0-9").rep(1).!).map(s => Arith.Literal(s.toInt));
+  def intLiteral[_: P]: P[Arith.Literal[Int]] =
+    P(CharIn("0-9").rep(1).!).map(s => Arith.Literal(s.toInt));
   def floatLiteral[_: P]: P[Arith.Literal[Float]] =
     P((CharIn("0-9").rep(1) ~ "." ~/ CharIn("0-9").rep(1)).!).map(s => Arith.Literal(s.toFloat));
   // TODO all the rest oO

@@ -46,7 +46,8 @@ trait APIUtils {
 
   /** Generate a new repeating section rowId with the same code as the sheetworkers use.
     *
-    * If generating multiple rowIds in a row, make sure to double check for duplicates, as generation is time seeded.
+    * If generating multiple rowIds in a row, make sure to double check for duplicates, as
+    * generation is time seeded.
     *
     * Alternatively use [[generateRowIds]] or [[RowIdPool]] to manage duplicate avoidance for you.
     */
@@ -54,9 +55,8 @@ trait APIUtils {
 
   /** Generate `n` new repeating section rowIDs with the same code as the sheetworkers use.
     *
-    * This implementation avoids generating duplicates,
-    * but it will block until it has the full number of IDs available,
-    * potentially wasting processing time.
+    * This implementation avoids generating duplicates, but it will block until it has the full
+    * number of IDs available, potentially wasting processing time.
     *
     * Alternatively use [[RowIdPool]] to manage duplicate avoidance for you.
     */
@@ -95,7 +95,10 @@ trait APIUtils {
   def sendChat(speakingAs: PlayerInfo, title: String, input: APIChatOutMessage): Unit = {
     sendChat(speakingAs, Some(title), input)
   }
-  def sendChat(speakingAs: PlayerInfo, title: Option[String] = None, input: APIChatOutMessage): Unit = {
+  def sendChat(
+      speakingAs: PlayerInfo,
+      title: Option[String] = None,
+      input: APIChatOutMessage): Unit = {
     val sas = s"player|${speakingAs.id}";
     sendChat(sas, title, input)
   }
@@ -129,13 +132,13 @@ trait APIUtils {
     p.future.transform(readTransformer(reader))
   }
 
-  private def msgToTemplate(title: String,
-                            input: APIChatOutMessage,
-                            showHeader: Boolean = true,
-                            showFooter: Boolean = true,
-                            isWarning: Boolean = false,
-                            isError: Boolean = false
-  ): ChatOutMessage = {
+  private def msgToTemplate(
+      title: String,
+      input: APIChatOutMessage,
+      showHeader: Boolean = true,
+      showFooter: Boolean = true,
+      isWarning: Boolean = false,
+      isError: Boolean = false): ChatOutMessage = {
     import APIChatOutMessage._;
 
     val res = input match {
@@ -149,19 +152,22 @@ trait APIUtils {
     Roll20API.log(s"About to send: ${res.render}");
     res
   }
-  private def msgStringToTemplate(titleText: String,
-                                  contentText: String,
-                                  cmd: ChatCommand,
-                                  showHeader: Boolean, // = true,
-                                  showFooter: Boolean, // = true,
-                                  isWarning: Boolean, // = false,
-                                  isError: Boolean // = false
+  private def msgStringToTemplate(
+      titleText: String,
+      contentText: String,
+      cmd: ChatCommand,
+      showHeader: Boolean, // = true,
+      showFooter: Boolean, // = true,
+      isWarning: Boolean, // = false,
+      isError: Boolean // = false
   ): ChatOutMessage = {
     import scalatags.Text.all._;
     import com.lkroll.roll20.api.templates._;
     import TemplateImplicits._;
 
-    require(!(isWarning && isError), "A message can only be either a warning or an error, not both!");
+    require(
+      !(isWarning && isError),
+      "A message can only be either a warning or an error, not both!");
 
     val res = outputTemplate match {
       case Some(ot) => {
@@ -190,10 +196,12 @@ trait APIUtils {
     case Failure(e) => Failure(e)
   }
 
-  private def extractRollSimple[T](replies: js.Array[Roll20API.ChatMessage], promise: Promise[String]): Unit = {
+  private def extractRollSimple[T](
+      replies: js.Array[Roll20API.ChatMessage],
+      promise: Promise[String]): Unit = {
     try {
       val reply = ChatContext.fromMsg(replies.head);
-      //APILogger.debug(s"Roll20 Roll: ${reply.toDetailedString()}");
+      // APILogger.debug(s"Roll20 Roll: ${reply.toDetailedString()}");
       assert(reply.`type` == ChatType.rollresult);
       val result = JSON.parse(reply.raw.content).asInstanceOf[Roll20API.InlineRollResults];
       promise.success(result.total.toString());
@@ -202,10 +210,12 @@ trait APIUtils {
     }
   }
 
-  private def extractRollInline[T](replies: js.Array[Roll20API.ChatMessage], promise: Promise[String]): Unit = {
+  private def extractRollInline[T](
+      replies: js.Array[Roll20API.ChatMessage],
+      promise: Promise[String]): Unit = {
     try {
       val reply = ChatContext.fromMsg(replies.head);
-      //APILogger.debug(s"Roll20 Roll: ${reply.toDetailedString()}");
+      // APILogger.debug(s"Roll20 Roll: ${reply.toDetailedString()}");
       assert(reply.`type` == ChatType.general);
       val result = reply.inlineRolls.head.results.total;
       promise.success(result);
@@ -225,15 +235,16 @@ case class ContextAPIUtils(context: ChatContext) extends APIUtils {
   override def outputTemplate: Option[TemplateRef] = context.outputTemplate;
 }
 
-/** Maintains the last generated rowId to make sure that [[RowIdPool.generateRowId]] never emits duplicates.
+/** Maintains the last generated rowId to make sure that [[RowIdPool.generateRowId]] never emits
+  * duplicates.
   */
 class RowIdPool {
   private var lastId: Option[String] = None;
 
   /** Generate a new repeating section rowId with the same code as the sheetworkers use.
     *
-    * This method guarantees that no duplicates will be generated, at the cost of potentially hot-blocking
-    * the execution if fresh ids are requested more rapidly than can be accommodated.
+    * This method guarantees that no duplicates will be generated, at the cost of potentially
+    * hot-blocking the execution if fresh ids are requested more rapidly than can be accommodated.
     */
   @annotation.nowarn("msg=match may not be exhaustive")
   def generateRowId(): String = {

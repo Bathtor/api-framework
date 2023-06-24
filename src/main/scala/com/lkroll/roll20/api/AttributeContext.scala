@@ -37,7 +37,7 @@ trait AttributeContext {
     * Note that Roll20 does not create attribute objects for fields at their default value!
     */
   def getAttribute[T](field: FieldLike[T]): Option[FieldAttribute[T]];
-  //def attributes[T](field: FieldLike[T]): List[FieldAttribute[T]]; // not sure this actually makes any sense
+  // def attributes[T](field: FieldLike[T]): List[FieldAttribute[T]]; // not sure this actually makes any sense
   /** Fetch all instances of this repeating section attribute.
     *
     * Note: As far as I can tell this also works for fields at their default value.
@@ -53,7 +53,9 @@ trait AttributeContext {
   def repeatingSection[T](sectionName: String): List[Attribute];
 
   def createAttribute[T](field: FieldLike[T]): FieldAttribute[T];
-  def createRepeating[T](field: FieldLike[T], providedRowId: Option[String] = None): FieldAttribute[T];
+  def createRepeating[T](
+      field: FieldLike[T],
+      providedRowId: Option[String] = None): FieldAttribute[T];
 }
 
 object AttributeMatchers {
@@ -68,7 +70,8 @@ object AttributeMatchers {
   }
 }
 
-class AttributeCache(private var attributes: List[Attribute], val character: Character) extends AttributeContext {
+class AttributeCache(private var attributes: List[Attribute], val character: Character)
+  extends AttributeContext {
   // TODO build a nice prefix tree from attributes to search this more efficiently
 
   override def attribute[T](field: FieldLike[T]): FieldAttribute[T] =
@@ -98,7 +101,8 @@ class AttributeCache(private var attributes: List[Attribute], val character: Cha
     val matcher: Attribute => Boolean = (a: Attribute) => nameMatcher(a.name);
     val res = attributes.filter(matcher);
     if (res.size > 1) {
-      APILogger.warn(s"Found more than one instance of ${field.qualifiedAttr} at row=${rowId}. Only returning first.");
+      APILogger.warn(
+        s"Found more than one instance of ${field.qualifiedAttr} at row=${rowId}. Only returning first.");
     }
     res match {
       case head :: _ => Some(head.typed(field))
@@ -111,5 +115,7 @@ class AttributeCache(private var attributes: List[Attribute], val character: Cha
   }
   // TODO Must deal with cache invalidation before implementing these
   override def createAttribute[T](field: FieldLike[T]): FieldAttribute[T] = ???;
-  override def createRepeating[T](field: FieldLike[T], providedRowId: Option[String] = None): FieldAttribute[T] = ???;
+  override def createRepeating[T](
+      field: FieldLike[T],
+      providedRowId: Option[String] = None): FieldAttribute[T] = ???;
 }

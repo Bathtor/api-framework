@@ -125,9 +125,8 @@ sealed abstract class Graphic protected (val raw: Roll20Object) extends Roll20Ma
     */
   def pageId: String = raw.get(Properties.pageid).asInstanceOf[String];
 
-  /** The URL of the graphic's image.
-    * See the note about avatar and imgsrc restrictions
-    * at [[https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions Roll20 Docs]].
+  /** The URL of the graphic's image. See the note about avatar and imgsrc restrictions at
+    * [[https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions Roll20 Docs]].
     */
   def imgSrc: URL = {
     val urlS = raw.get(Properties.imgsrc).asInstanceOf[String];
@@ -143,7 +142,8 @@ sealed abstract class Graphic protected (val raw: Roll20Object) extends Roll20Ma
 
   /** List currently active status markers.
     *
-    * @return A list of currently active status markers.
+    * @return
+    *   A list of currently active status markers.
     */
   def statusMarkers: List[String] = {
     val stringified = raw.get(Properties.statusmarkers).asInstanceOf[String];
@@ -161,7 +161,8 @@ sealed abstract class Graphic protected (val raw: Roll20Object) extends Roll20Ma
 
   /** Same as `statusMarkers` but without the counts.
     *
-    * @return A list of currently active status markers with counts removed.
+    * @return
+    *   A list of currently active status markers with counts removed.
     */
   def statusMarkersStripped: List[String] = {
     statusMarkers.map(s => s.split("@").head)

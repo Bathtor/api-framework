@@ -75,7 +75,8 @@ trait APIScript extends APILogging with APIUtils {
       commands.get(cmd) match {
         case Some(handler) => handler(args, chatctx);
         case None =>
-          debug(s"${this.getClass.getSimpleName}: No handler found for command ${cmd} in ${args.mkString(" ")}")
+          debug(
+            s"${this.getClass.getSimpleName}: No handler found for command ${cmd} in ${args.mkString(" ")}")
       }
     }
   }

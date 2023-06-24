@@ -24,7 +24,12 @@
  */
 package com.lkroll.roll20.api
 
-import com.lkroll.roll20.core.{ChatCommand, ChatOutMessage, CoreImplicits, PrimitiveStringSerialisers}
+import com.lkroll.roll20.core.{
+  ChatCommand,
+  ChatOutMessage,
+  CoreImplicits,
+  PrimitiveStringSerialisers
+}
 import org.rogach.scallop._
 import com.lkroll.roll20.api.conf._
 import scalatags.Text.all._
@@ -36,22 +41,28 @@ trait APIImplicits extends CoreImplicits with PrimitiveStringSerialisers {
   implicit class ApplicableOption[T](opt: ScallopOption[T]) {
     def <<=(v: T): OptionApplication = {
       v match {
-        case s: String    => AppliedOption(opt.asInstanceOf[ScallopOption[String]], s, DefaultOptionRenderers.str)
+        case s: String =>
+          AppliedOption(opt.asInstanceOf[ScallopOption[String]], s, DefaultOptionRenderers.str)
         case b: Boolean   => BooleanOption(opt.asInstanceOf[ScallopOption[Boolean]], b)
         case o: Option[_] => throw new RuntimeException("Use <<? instead <<= for option values!")
         case _            => AppliedOption(opt, v, DefaultOptionRenderers.trivial[T])
       }
     }
     def <<?[S](v: S)(implicit ev: T =:= Option[S]): OptionApplication = {
-      OptionOption(opt.asInstanceOf[ScallopOption[Option[S]]], Some(v), DefaultOptionRenderers.trivial[S])
+      OptionOption(
+        opt.asInstanceOf[ScallopOption[Option[S]]],
+        Some(v),
+        DefaultOptionRenderers.trivial[S])
     }
     def <<?[S](v: Option[S])(implicit ev: T =:= Option[S]): OptionApplication = {
       OptionOption(opt.asInstanceOf[ScallopOption[Option[S]]], v, DefaultOptionRenderers.trivial[S])
     }
     def <<=[S](v: S)(implicit ev: T =:= List[S]): OptionApplication = {
       v match {
-        case s: String => ListOption(opt.asInstanceOf[ScallopOption[List[String]]], s, DefaultOptionRenderers.str)
-        case _         => ListOption(opt.asInstanceOf[ScallopOption[List[S]]], v, DefaultOptionRenderers.trivial[S])
+        case s: String =>
+          ListOption(opt.asInstanceOf[ScallopOption[List[String]]], s, DefaultOptionRenderers.str)
+        case _ =>
+          ListOption(opt.asInstanceOf[ScallopOption[List[S]]], v, DefaultOptionRenderers.trivial[S])
       }
     }
   }

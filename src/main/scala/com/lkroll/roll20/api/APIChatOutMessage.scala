@@ -31,7 +31,8 @@ object APIChatOutMessage {
   final case class CoreMessage(msg: ChatOutMessage) extends APIChatOutMessage {
     override def render: String = msg.render;
   }
-  final case class TemplateMessage(cmd: ChatCommand, content: templates.TemplateApplication) extends APIChatOutMessage {
+  final case class TemplateMessage(cmd: ChatCommand, content: templates.TemplateApplication)
+    extends APIChatOutMessage {
     override def render: String = s"${cmd.render} ${content.render}";
     def asCore: ChatOutMessage = CommandMessage(cmd, content.render);
   }

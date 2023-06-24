@@ -32,9 +32,13 @@ import com.lkroll.roll20.core.{FieldLike, StringSerialiser}
 
 object Attribute {
   def create(characterId: String, name: String): Attribute = {
-    val attr = js.Dynamic.literal(_characterid = characterId, name = name).asInstanceOf[AttributeCreate];
+    val attr =
+      js.Dynamic.literal(_characterid = characterId, name = name).asInstanceOf[AttributeCreate];
     val attrObj = createObj(Roll20ObjectTypes.attribute, attr);
-    assert(attrObj.get(Roll20Managed.Properties.`type`).asInstanceOf[String] == Roll20ObjectTypes.attribute);
+    assert(
+      attrObj
+        .get(Roll20Managed.Properties.`type`)
+        .asInstanceOf[String] == Roll20ObjectTypes.attribute);
     new Attribute(attrObj)
   }
 
@@ -43,10 +47,10 @@ object Attribute {
     attr.typed(field)
   }
 
-  def createRepeating[T](characterId: String,
-                         field: FieldLike[T],
-                         providedRowId: Option[String] = None
-  ): FieldAttribute[T] = {
+  def createRepeating[T](
+      characterId: String,
+      field: FieldLike[T],
+      providedRowId: Option[String] = None): FieldAttribute[T] = {
     val rowId = providedRowId match {
       case Some(s) => s
       case None    => APIUtils.generateRowId()
@@ -62,10 +66,10 @@ object Attribute {
   }
 
   private def findRaw(name: String, characterId: String): List[Roll20Object] = {
-    val query = js.Dynamic.literal("type" -> Roll20ObjectTypes.attribute,
-                                   Properties.name -> name,
-                                   Properties.characterid -> characterId
-    );
+    val query = js.Dynamic.literal(
+      "type" -> Roll20ObjectTypes.attribute,
+      Properties.name -> name,
+      Properties.characterid -> characterId);
     val res = findObjs(query);
     res.toList
   }
@@ -104,7 +108,9 @@ object Attribute {
   }
 
   def findMatching(fieldMatcher: Attribute => Boolean, characterId: String): List[Attribute] = {
-    val query = js.Dynamic.literal("type" -> Roll20ObjectTypes.attribute, Properties.characterid -> characterId);
+    val query = js.Dynamic.literal(
+      "type" -> Roll20ObjectTypes.attribute,
+      Properties.characterid -> characterId);
     val res = findObjs(query).toList;
     res.map(o => new Attribute(o)).filter(fieldMatcher)
   }
@@ -121,12 +127,16 @@ object Attribute {
     res.map(a => a.typed(field))
   }
 
-  def findRepeating[T](field: FieldLike[T], characterId: String, rowId: String): Option[FieldAttribute[T]] = {
+  def findRepeating[T](
+      field: FieldLike[T],
+      characterId: String,
+      rowId: String): Option[FieldAttribute[T]] = {
     val nameMatcher = field.nameMatcherRow(rowId);
     val matcher: Attribute => Boolean = (a: Attribute) => nameMatcher(a.name);
     val res = findMatching(matcher, characterId);
     if (res.size > 1) {
-      APILogger.warn(s"Found more than one instance of ${field.qualifiedAttr} at row=${rowId}. Only returning first.");
+      APILogger.warn(
+        s"Found more than one instance of ${field.qualifiedAttr} at row=${rowId}. Only returning first.");
     }
     res match {
       case head :: _ => Some(head.typed(field))
@@ -176,7 +186,8 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
   }
 
   /** The max value of the attribute can be accessed in chat and macros with the syntax
-    * &#64;{Character Name|Attribute Name|max} or in abilities with the syntax &#64;{Attribute Name|max}.
+    * &#64;{Character Name|Attribute Name|max} or in abilities with the syntax &#64;{Attribute
+    * Name|max}.
     */
   def max: String = raw.get(Properties.max).toString;
   def max_=(s: String): Unit = raw.set(Properties.max, s);
@@ -192,16 +203,18 @@ class Attribute private[api] (val raw: Roll20Object) extends Roll20Managed {
   /** Returns this attribute as typed by the given field.
     */
   def typed[T](f: FieldLike[T]): FieldAttribute[T] = {
-    //assert(this.name == f.name); // doesn't hold for repeating sections
+    // assert(this.name == f.name); // doesn't hold for repeating sections
     new FieldAttribute(f, this.raw);
   }
 }
 
 /** Typed version of an attribute, based on SheetModel fields.
   *
-  * @tparam T type of the attribute
+  * @tparam T
+  *   type of the attribute
   */
-class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Object) extends Attribute(_raw) {
+class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Object)
+  extends Attribute(_raw) {
 
   /** Get the current value of the attributed converted to `T` via the field's readable instance.
     */
@@ -215,8 +228,8 @@ class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Objec
     vO.get
   }
 
-  /** Get the current value of the attributed converted to `T` via the field's readable instance, as on `Option`
-    * in case the conversion doesn't work (or the field is actually empty).
+  /** Get the current value of the attributed converted to `T` via the field's readable instance, as
+    * on `Option` in case the conversion doesn't work (or the field is actually empty).
     */
   def get: Option[T] = {
     val rawV = if (field.isMax) {
@@ -227,8 +240,8 @@ class FieldAttribute[T] private[api] (val field: FieldLike[T], _raw: Roll20Objec
     field.read(rawV)
   }
 
-  /** Get the current value of the attributed converted to `T` via the field's readable instance,
-    * or the default value in case the conversion doesn't work or the field is actually empty.
+  /** Get the current value of the attributed converted to `T` via the field's readable instance, or
+    * the default value in case the conversion doesn't work or the field is actually empty.
     */
   def getOrDefault: T = {
     this.get.getOrElse(field.read(field.initialValue).get)

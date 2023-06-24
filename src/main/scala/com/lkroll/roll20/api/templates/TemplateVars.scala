@@ -72,7 +72,8 @@ object TemplateVar {
   import TemplateVal._;
   import CoreImplicits._;
 
-  def parser[_: P] = P("{{" ~ keyParser ~ "=" ~/ valueParser ~ "}}").map(t => TemplateVar(t._1, t._2));
+  def parser[_: P] =
+    P("{{" ~ keyParser ~ "=" ~/ valueParser ~ "}}").map(t => TemplateVar(t._1, t._2));
   def keyParser[_: P]: P[String] = P(CharsWhile(c => c != '=' && c != '{' && c != '}').!);
   def valueParser[_: P]: P[TemplateVal] =
     P(emptyValueParser | translationLabelParser | inlineRollParser | inlineRollRefParser | rawParser);
@@ -99,13 +100,15 @@ object TemplateVar {
 
 case class TemplateVars(vars: List[TemplateVar]) extends Renderable {
   override def render: String = vars.map(_.render).mkString(" ");
-  def replaceInlineRollRefs(rolls: List[InlineRoll], transformer: InlineRoll => TemplateVal): TemplateVars = {
+  def replaceInlineRollRefs(
+      rolls: List[InlineRoll],
+      transformer: InlineRoll => TemplateVal): TemplateVars = {
     val trans2: Function2[InlineRoll, TemplateVar, TemplateVal] = (ir, tv) => transformer(ir);
     replaceInlineRollRefs(rolls, trans2)
   }
-  def replaceInlineRollRefs(rolls: List[InlineRoll],
-                            transformer: (InlineRoll, TemplateVar) => TemplateVal
-  ): TemplateVars = {
+  def replaceInlineRollRefs(
+      rolls: List[InlineRoll],
+      transformer: (InlineRoll, TemplateVar) => TemplateVal): TemplateVars = {
     val res = vars.map { tvar =>
       val newval = tvar.value match {
         case TemplateVal.InlineRollRef(index) => {
