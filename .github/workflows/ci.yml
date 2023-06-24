@@ -16,7 +16,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v1
     - name: Setup Scala
-      uses: olafurpg/setup-scala@v10
+      uses: olafurpg/setup-scala@v14
       with:
         java-version: "adopt@1.${{ matrix.java }}"
     - name: Scalafmt
