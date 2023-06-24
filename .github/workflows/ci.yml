@@ -10,7 +10,6 @@ jobs:
         include:
           - java: 11
           - java: 17
-          - java: 20
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -18,7 +17,7 @@ jobs:
     - name: Setup Scala
       uses: olafurpg/setup-scala@v14
       with:
-        java-version: "adopt@1.${{ matrix.java }}"
+        java-version: "zulu@1.${{ matrix.java }}"
     - name: Scalafmt
       run: sbt -v scalafmtCheckAll
     - name: Build and Test
