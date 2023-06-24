@@ -8,9 +8,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - java: 8
           - java: 11
-          - java: 14
+          - java: 17
+          - java: 20
     runs-on: ubuntu-latest
     steps:
     - name: Checkout

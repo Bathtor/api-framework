@@ -44,18 +44,25 @@ class CommandInvocation extends AnyFunSuite with Matchers {
 
   test("Should invoke commands with option args") {
     val conf = new TestConf(List.empty);
-    val button = TestCommand.invoke("testl", List(conf.arg1 <<= "testvalue", conf.arg6 <<? Some("test")));
+    val button =
+      TestCommand.invoke("testl", List(conf.arg1 <<= "testvalue", conf.arg6 <<? Some("test")));
     button.render shouldBe ("[testl](!test --arg1 testvalue --arg6 test)");
-    val button2 = TestCommand.invoke("testl", List(conf.arg1 <<= "testvalue", conf.arg6 <<? Option.empty[String]));
+    val button2 = TestCommand.invoke(
+      "testl",
+      List(conf.arg1 <<= "testvalue", conf.arg6 <<? Option.empty[String]));
     button2.render shouldBe ("[testl](!test --arg1 testvalue --arg6 None)");
   }
 
   test("Should invoke commands with scallop args") {
     val conf = new TestConf(List.empty);
-    val button = TestCommand.invoke("testl", List(conf.arg1 <<= "testvalue", conf.arg2 <<= false, conf.arg3 <<= 5));
+    val button = TestCommand.invoke(
+      "testl",
+      List(conf.arg1 <<= "testvalue", conf.arg2 <<= false, conf.arg3 <<= 5));
     button.render shouldBe ("[testl](!test --arg1 testvalue  --arg3 5)");
 
-    val button2 = TestCommand.invoke("testl", List(conf.arg1 <<= "testvalue", conf.arg2 <<= true, conf.arg3 <<= 5));
+    val button2 = TestCommand.invoke(
+      "testl",
+      List(conf.arg1 <<= "testvalue", conf.arg2 <<= true, conf.arg3 <<= 5));
     button2.render shouldBe ("[testl](!test --arg1 testvalue --arg2 --arg3 5)");
   }
 
@@ -63,7 +70,12 @@ class CommandInvocation extends AnyFunSuite with Matchers {
     val conf = new TestConf(List.empty);
     val button = TestCommand.invoke(
       "testl",
-      List(conf.arg1 <<= "testvalue", conf.arg4 <<= "t1", conf.arg4 <<= "t2", conf.arg5 <<= 5, conf.arg5 <<= 6)
+      List(
+        conf.arg1 <<= "testvalue",
+        conf.arg4 <<= "t1",
+        conf.arg4 <<= "t2",
+        conf.arg5 <<= 5,
+        conf.arg5 <<= 6)
     );
     button.render shouldBe ("[testl](!test --arg1 testvalue --arg4 t1 --arg4 t2 --arg5 5 --arg5 6)");
   }

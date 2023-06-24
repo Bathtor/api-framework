@@ -31,7 +31,7 @@ import com.lkroll.roll20.core._
 import fastparse.Parsed
 
 class ArithmeticParsingTests extends AnyFunSuite with Matchers {
-  //import CoreImplicits._
+  // import CoreImplicits._
 
   test("Int literals should parse") {
     val testString = "10";
